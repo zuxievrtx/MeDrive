@@ -2,28 +2,58 @@
 
 namespace App\Models;
 
+use App\Enums\LicenseClass;
+use Database\Factories\DriverProfileFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DriverProfile extends Model
 {
-    public $timestamps = false;
+    /** @use HasFactory<DriverProfileFactory> */
+    use HasFactory;
 
-    protected $fillable = ['user_id', 'plate_number', 'is_active', 'is_on_duty', 'last_lat', 'last_lng', 'last_location_at'];
+    protected $fillable = [
+        'user_id',
+        'clinic_id',
+        'employee_number',
+        'license_number',
+        'license_class',
+        'license_expires_at',
+        'photo_path',
+        'created_by',
+    ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'license_class' => LicenseClass::class,
+            'license_expires_at' => 'date',
             'is_on_duty' => 'boolean',
-            'last_lat' => 'decimal:7',
-            'last_lng' => 'decimal:7',
-            'last_location_at' => 'datetime',
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Clinic, $this>
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

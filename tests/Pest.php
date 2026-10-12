@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -44,7 +45,12 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Muat data master + data contoh ERD v3 lalu kembalikan akun admin pusat (id 6).
+ */
+function seedDemoAndGetAdmin(): User
 {
-    // ..
+    test()->seed();
+
+    return User::query()->findOrFail(6);
 }

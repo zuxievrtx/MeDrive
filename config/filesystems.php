@@ -33,7 +33,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Berkas sensitif (foto korban, surat kematian) hanya lewat route admin ber-otorisasi.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

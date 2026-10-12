@@ -1,9 +1,226 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import 'leaflet/dist/leaflet.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../js/**/*.js';
+
+/*
+ * Palet brand Medrive (gradasi merah). Merah dipakai sebagai satu-satunya warna brand:
+ * sidebar, tombol utama, dan sinyal "menunggu". Warna status laporan bersifat semantik dan terpisah.
+ */
+:root {
+    --mr-950: #020000;
+    --mr-900: #400000;
+    --mr-800: #6e0000;
+    --mr-700: #9a0000;
+    --mr-600: #b30000;
+    --mr-500: #d14545;
+    --mr-400: #e88585;
+    --mr-300: #f7c6c6;
+    --mr-50: #fdf2f2;
+}
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+
+    --color-mr-950: #020000;
+    --color-mr-900: #400000;
+    --color-mr-800: #6e0000;
+    --color-mr-700: #9a0000;
+    --color-mr-600: #b30000;
+    --color-mr-500: #d14545;
+    --color-mr-400: #e88585;
+    --color-mr-300: #f7c6c6;
+    --color-mr-50: #fdf2f2;
+
+    --color-canvas: #f8f7f5;
+}
+
+@layer base {
+    html {
+        font-feature-settings: 'cv11', 'ss01';
+    }
+
+    body {
+        @apply bg-canvas text-stone-900 antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--mr-600);
+        outline-offset: 2px;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+/* Dasar tombol: tinggi minimal 40px dan sudut 8px, sengaja lebih kecil dari kartu (12px) agar hierarki terbaca. */
+@utility btn {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@layer components {
+    .sidebar-surface {
+        background: linear-gradient(180deg, var(--mr-950) 0%, var(--mr-900) 58%, var(--mr-700) 100%);
+    }
+
+    .btn-primary {
+        @apply btn bg-mr-600 text-white hover:bg-mr-700;
+    }
+
+    .btn-secondary {
+        @apply btn border border-stone-300 bg-white text-stone-800 hover:border-mr-300 hover:bg-mr-50;
+    }
+
+    .btn-danger {
+        @apply btn border border-mr-300 bg-white text-mr-700 hover:bg-mr-50;
+    }
+
+    .btn-ghost {
+        @apply btn px-3 text-stone-700 hover:bg-stone-100;
+    }
+
+    .card {
+        @apply rounded-xl border border-stone-200/80 bg-white shadow-[0_1px_2px_rgb(28_25_23/0.06),0_4px_12px_-6px_rgb(28_25_23/0.08)];
+    }
+
+    .form-label {
+        @apply mb-1.5 block text-sm font-medium text-stone-800;
+    }
+
+    .form-input {
+        @apply block min-h-10 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm text-stone-900 placeholder:text-stone-500 focus:border-mr-600 focus:ring-2 focus:ring-mr-600/20 focus:outline-none;
+    }
+
+    .form-error {
+        @apply mt-1 text-sm text-mr-700;
+    }
+
+    .form-hint {
+        @apply mt-1 text-xs text-stone-600;
+    }
+
+    .data-table {
+        @apply w-full text-left text-sm;
+    }
+
+    .data-table thead th {
+        @apply border-b border-stone-200 bg-stone-50 px-3 py-2.5 text-xs font-semibold whitespace-nowrap text-stone-600;
+    }
+
+    .data-table tbody td {
+        @apply border-b border-stone-100 px-3 py-2.5 align-top;
+    }
+
+    .data-table tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .skeleton {
+        @apply animate-pulse rounded bg-stone-200;
+    }
+
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* Marker peta: badan ikon tetap tegak, "moncong" penunjuk arah diputar sesuai heading. */
+.mr-marker {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.mr-marker__body {
+    position: absolute;
+    inset: 4px;
+    display: grid;
+    place-items: center;
+    border-radius: 9999px;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 12px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+
+.mr-marker__heading {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.6s ease;
+}
+
+.mr-marker__heading::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 9px solid var(--marker-color, #57534e);
+}
+
+.mr-marker--stale {
+    opacity: 0.45;
+    filter: grayscale(0.7);
+}
+
+.mr-marker__label {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgb(255 255 255 / 0.95);
+    color: #1c1917;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+/* Pulse hanya untuk lokasi laporan aktif: menandai titik yang sedang dituju ambulans. */
+.mr-pulse {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--pulse-color, var(--mr-600));
+    border: 2px solid #fff;
+}
+
+.mr-pulse::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 9999px;
+    border: 3px solid var(--pulse-color, var(--mr-600));
+    animation: mr-pulse 1.8s ease-out infinite;
+}
+
+@keyframes mr-pulse {
+    from {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    to {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mr-pulse::after,
+    .skeleton {
+        animation: none;
+    }
+}
+
+.leaflet-container {
+    font-family: inherit;
 }

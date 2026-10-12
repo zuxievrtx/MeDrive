@@ -14,15 +14,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('driver_shifts', function (Blueprint $table) {
+        $isMysql = in_array(DB::getDriverName(), ['mysql', 'mariadb'], true);
+
+        // MySQL memakai IF() persis seperti medrive_db_v3.sql; SQLite (test) tidak punya IF(), jadi pakai CASE yang setara
+        $openDriverExpression = $isMysql ? 'IF(ended_at IS NULL, driver_id, NULL)' : 'CASE WHEN ended_at IS NULL THEN driver_id END';
+        $openAmbulanceExpression = $isMysql ? 'IF(ended_at IS NULL, ambulance_id, NULL)' : 'CASE WHEN ended_at IS NULL THEN ambulance_id END';
+
+        Schema::create('driver_shifts', function (Blueprint $table) use ($openDriverExpression, $openAmbulanceExpression) {
             $table->id();
             $table->unsignedBigInteger('driver_id');
             $table->unsignedBigInteger('ambulance_id');
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('ended_at')->nullable();
             $table->enum('end_reason', ['selesai_shift', 'otomatis', 'dihentikan_admin'])->nullable();
-            $table->unsignedBigInteger('open_driver_id')->storedAs('IF(ended_at IS NULL, driver_id, NULL)');
-            $table->unsignedBigInteger('open_ambulance_id')->storedAs('IF(ended_at IS NULL, ambulance_id, NULL)');
+            $table->unsignedBigInteger('open_driver_id')->storedAs($openDriverExpression);
+            $table->unsignedBigInteger('open_ambulance_id')->storedAs($openAmbulanceExpression);
 
             $table->unique('open_driver_id', 'uq_driver_shifts_open_driver');
             $table->unique('open_ambulance_id', 'uq_driver_shifts_open_ambulance');
@@ -38,7 +44,7 @@ return new class extends Migration
                 ->restrictOnDelete()->restrictOnUpdate();
         });
 
-        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+        if ($isMysql) {
             DB::statement(<<<'SQL'
                 ALTER TABLE driver_shifts
                     ADD CONSTRAINT chk_driver_shifts_end CHECK (
