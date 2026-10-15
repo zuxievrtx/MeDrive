@@ -14,6 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
+/**
+ * @group Admin
+ */
 class AmbulanceController extends ApiController
 {
     public function __construct(private FleetService $fleet) {}

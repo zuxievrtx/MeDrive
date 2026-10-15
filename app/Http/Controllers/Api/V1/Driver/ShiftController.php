@@ -9,6 +9,9 @@ use App\Http\Resources\DriverShiftResource;
 use App\Services\ShiftService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @group Driver
+ */
 class ShiftController extends ApiController
 {
     public function __construct(private ShiftService $shifts) {}

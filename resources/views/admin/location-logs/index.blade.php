@@ -1,55 +1,50 @@
+@php
+    $retentionDays = config('medrive.location_log_retention_days');
+@endphp
 <x-admin.layout title="Log Lokasi" :breadcrumbs="['Laporan Darurat' => route('admin.reports.index')]">
     <x-admin.page-header title="Log Lokasi" description="Rute historis per driver dari log lokasi detail. Rentang maksimal {{ $retentionDays }} hari sesuai masa simpan log." />
 
-    <form method="GET" action="{{ route('admin.location-logs.index') }}" class="card mb-4 grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-[2fr_1.5fr_1.5fr_auto_auto] xl:items-end" role="search">
-        @if ($report)<input type="hidden" name="report_id" value="{{ $report->id }}">@endif
-        <div>
-            <label for="driver_id" class="form-label">Driver</label>
-            <select id="driver_id" name="driver_id" required class="form-input">
-                <option value="">Pilih driver</option>
-                @foreach ($drivers as $option)<option value="{{ $option->id }}" @selected(($filters['driver_id'] ?? null) == $option->id)>{{ $option->name }}</option>@endforeach
-            </select>
-        </div>
-        <div>
-            <label for="from" class="form-label">Dari</label>
-            <input id="from" name="from" type="datetime-local" value="{{ $from->format('Y-m-d\TH:i') }}" min="{{ now()->subDays($retentionDays)->format('Y-m-d\TH:i') }}" class="form-input">
-            @error('from')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <label for="to" class="form-label">Sampai</label>
-            <input id="to" name="to" type="datetime-local" value="{{ $to->format('Y-m-d\TH:i') }}" class="form-input">
-            @error('to')<p class="form-error">{{ $message }}</p>@enderror
-        </div>
-        <label class="inline-flex min-h-10 items-center gap-2 text-sm whitespace-nowrap">
-            <input type="checkbox" name="accurate_only" value="1" class="size-4 accent-mr-600" @checked($filters['accurate_only'] ?? false)>
-            Saring akurasi &gt; 50 m
-        </label>
-        <button type="submit" class="btn-primary"><i class="fa-solid fa-magnifying-glass-location" aria-hidden="true"></i> Tampilkan rute</button>
-    </form>
+    <div x-data="adminOptions('drivers')">
+    <div x-data="locationLogMap({ routeUrl: @js(route('api.v1.admin.location-logs')), trackingUrl: @js(route('api.v1.admin.tracking.live')) })">
+        <form @submit.prevent="submit()" class="card mb-4 grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-[2fr_1.5fr_1.5fr_auto_auto] xl:items-end" role="search" novalidate>
+            <div>
+                <label for="driver_id" class="form-label">Driver</label>
+                <select id="driver_id" x-model="filters.driver_id" required class="form-input" :aria-invalid="errors.driver_id ? 'true' : null">
+                    <option value="">Pilih driver</option>
+                    <template x-for="item in options.drivers ?? []" :key="item.id"><option :value="String(item.id)" x-text="item.name" :selected="String(item.id) === filters.driver_id"></option></template>
+                </select>
+                <p x-show="errors.driver_id" x-cloak class="form-error" x-text="errors.driver_id?.[0]"></p>
+            </div>
+            <div>
+                <label for="from" class="form-label">Dari</label>
+                <input id="from" type="datetime-local" x-model="filters.from" class="form-input" :aria-invalid="errors.from ? 'true' : null">
+                <p x-show="errors.from" x-cloak class="form-error" x-text="errors.from?.[0]"></p>
+            </div>
+            <div>
+                <label for="to" class="form-label">Sampai</label>
+                <input id="to" type="datetime-local" x-model="filters.to" class="form-input" :aria-invalid="errors.to ? 'true' : null">
+                <p x-show="errors.to" x-cloak class="form-error" x-text="errors.to?.[0]"></p>
+            </div>
+            <label class="inline-flex min-h-10 items-center gap-2 text-sm whitespace-nowrap">
+                <input type="checkbox" x-model="filters.accurate_only" class="size-4 accent-mr-600">
+                Saring akurasi &gt; 50 m
+            </label>
+            <button type="submit" class="btn-primary" :disabled="loading"><i class="fa-solid fa-magnifying-glass-location" aria-hidden="true"></i> Tampilkan rute</button>
+        </form>
 
-    @if ($report)
-        <p class="mb-4 text-sm text-stone-700">Rute difilter untuk laporan <a href="{{ route('admin.reports.show', $report) }}" class="tabular font-semibold text-mr-700 hover:underline">{{ $report->code }}</a>.
-            <a href="{{ route('admin.location-logs.index', array_filter(['driver_id' => $filters['driver_id'] ?? null])) }}" class="font-semibold hover:underline">Hapus filter laporan</a></p>
-    @endif
+        <p x-show="report" x-cloak class="mb-4 text-sm text-stone-700">Rute difilter untuk laporan <a :href="`/admin/reports/${report?.id}`" class="tabular font-semibold text-mr-700 hover:underline" x-text="report?.code"></a>.
+            <button type="button" class="font-semibold hover:underline" @click="clearReport()">Hapus filter laporan</button></p>
 
-    @if (! $driver)
-        <div class="card">
+        <div x-show="!loaded && !loading" class="card">
             <x-admin.empty-state icon="route" title="Pilih driver untuk melihat rute" description="Default rentang adalah 1 jam terakhir. Untuk rute satu laporan, buka dari halaman detail laporan." />
         </div>
-    @else
-        @if ($mockCount > 0)
-            <div class="mb-4 flex gap-3 rounded-lg border border-mr-300 bg-mr-50 p-4 text-sm text-mr-800" role="alert">
-                <i class="fa-solid fa-triangle-exclamation mt-0.5" aria-hidden="true"></i>
-                <div><strong>Terdeteksi {{ $mockCount }} titik GPS palsu</strong> pada rentang ini. Titik tersebut ditandai merah di tabel dan peta; periksa perangkat driver.</div>
-            </div>
-        @endif
 
-        <div x-data="locationLogMap({
-                dataUrl: @js(route('admin.location-logs.data')),
-                trackingUrl: @js(route('admin.tracking.data')),
-                params: @js(array_merge($filters, ['from' => $from->toDateTimeString(), 'to' => $to->toDateTimeString()])),
-                live: @js($isLive),
-             })">
+        <div x-show="loaded || loading" x-cloak>
+            <div x-show="summary?.mock_points > 0" x-cloak class="mb-4 flex gap-3 rounded-lg border border-mr-300 bg-mr-50 p-4 text-sm text-mr-800" role="alert">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5" aria-hidden="true"></i>
+                <div><strong x-text="`Terdeteksi ${summary?.mock_points} titik GPS palsu`"></strong> pada rentang ini. Titik tersebut ditandai merah di tabel dan peta; periksa perangkat driver.</div>
+            </div>
+
             <section class="mb-4 grid gap-3 sm:grid-cols-3 xl:grid-cols-5" aria-label="Ringkasan rute">
                 @foreach (['points' => 'Jumlah titik', 'distance' => 'Jarak tempuh', 'max' => 'Kecepatan maks', 'avg' => 'Kecepatan rata-rata', 'battery' => 'Baterai terakhir'] as $key => $label)
                     <div class="card p-4">
@@ -62,19 +57,17 @@
 
             <section class="card mb-4 overflow-hidden" aria-label="Peta rute">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 px-4 py-3">
-                    <h2 class="font-semibold">Rute {{ $driver->name }}</h2>
+                    <h2 class="font-semibold" x-text="driver ? `Rute ${driver.name}` : 'Rute'"></h2>
                     <div class="flex items-center gap-3 text-xs text-stone-600">
                         <span x-show="summary?.sampled" x-cloak>Titik di peta disederhanakan agar ringan.</span>
-                        @if ($isLive)
-                            <span class="inline-flex items-center gap-1.5 font-semibold text-green-800"><span class="size-2 rounded-full bg-green-600"></span> Mode realtime <span x-text="mode === 'polling' ? '(polling)' : ''"></span></span>
-                        @endif
+                        <span x-show="isLive" x-cloak class="inline-flex items-center gap-1.5 font-semibold text-green-800"><span class="size-2 rounded-full bg-green-600"></span> Mode realtime <span x-text="mode === 'polling' ? '(polling)' : ''"></span></span>
                     </div>
                 </div>
                 <div class="relative h-[28rem]">
                     <div x-ref="map" class="absolute inset-0 z-0"></div>
                     <div x-show="loading" class="absolute inset-0 z-10 bg-white p-4"><div class="skeleton h-full w-full"></div></div>
                     <p x-show="!loading && error" x-cloak class="absolute inset-x-4 top-4 z-10 rounded-lg border border-mr-300 bg-white p-3 text-sm text-mr-700" x-text="error"></p>
-                    <p x-show="!loading && !error && points.length === 0" x-cloak class="absolute inset-x-4 top-4 z-10 rounded-lg bg-white/95 p-3 text-center text-sm text-stone-700 shadow">Tidak ada titik lokasi pada rentang ini.</p>
+                    <p x-show="!loading && !error && loaded && points.length === 0" x-cloak class="absolute inset-x-4 top-4 z-10 rounded-lg bg-white/95 p-3 text-center text-sm text-stone-700 shadow">Tidak ada titik lokasi pada rentang ini.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 border-t border-stone-100 px-4 py-3" x-show="points.length > 1">
                     <button type="button" class="btn-secondary min-w-28" @click="togglePlay()" :aria-label="playing ? 'Jeda pemutaran' : 'Putar rute'">
@@ -97,35 +90,38 @@
                     </ul>
                 </section>
             </template>
-        </div>
 
-        <section class="card overflow-hidden" aria-labelledby="ping-title">
-            <h2 id="ping-title" class="border-b border-stone-100 px-4 py-3 font-semibold">Data ping</h2>
-            @if ($pings->isEmpty())
-                <x-admin.empty-state icon="satellite-dish" title="Tidak ada ping pada rentang ini" description="Coba perluas rentang waktu (maksimal {{ $retentionDays }} hari)." />
-            @else
-                <div class="relative overflow-x-auto">
+            <section class="card overflow-hidden" aria-labelledby="ping-title"
+                     x-data="apiList({ url: @js(route('api.v1.admin.location-logs.pings')), syncUrl: false, autoload: false })"
+                     @medrive:location-range.window="filters = { ...$event.detail }; apply()">
+                <h2 id="ping-title" class="border-b border-stone-100 px-4 py-3 font-semibold">Data ping</h2>
+                <x-admin.api-states icon="satellite-dish" empty="Tidak ada ping pada rentang ini" empty-description="Coba perluas rentang waktu (maksimal {{ $retentionDays }} hari)." />
+                <div class="relative overflow-x-auto" x-show="rows.length > 0" :class="loading ? 'opacity-60' : ''">
                     <table class="data-table">
                         <thead><tr><th>Waktu</th><th>Koordinat</th><th>Akurasi</th><th>Kecepatan</th><th>Arah</th><th>Baterai</th><th>Provider</th><th>Laporan</th><th>Catatan</th></tr></thead>
                         <tbody>
-                            @foreach ($pings as $ping)
-                                <tr @class(['bg-mr-50' => $ping->is_mock_location])>
-                                    <td class="tabular whitespace-nowrap">{{ $ping->recorded_at->format('d/m/Y H:i:s') }}</td>
-                                    <td class="tabular whitespace-nowrap">{{ number_format((float) $ping->latitude, 6) }}, {{ number_format((float) $ping->longitude, 6) }}</td>
-                                    <td @class(['tabular whitespace-nowrap', 'font-semibold text-amber-800' => $ping->accuracy_m > 50])>{{ $ping->accuracy_m !== null ? $ping->accuracy_m.' m' : '-' }}</td>
-                                    <td class="tabular whitespace-nowrap">{{ $ping->speed_kmh ?? '-' }} km/j</td>
-                                    <td class="tabular">{{ $ping->heading !== null ? $ping->heading.'°' : '-' }}</td>
-                                    <td @class(['tabular', 'font-semibold text-mr-700' => $ping->battery_level !== null && $ping->battery_level < 20])>{{ $ping->battery_level !== null ? $ping->battery_level.'%' : '-' }}</td>
-                                    <td>{{ $ping->provider ?? '-' }}</td>
-                                    <td class="tabular">{{ $ping->report_id ? '#'.$ping->report_id : '-' }}</td>
-                                    <td>@if ($ping->is_mock_location)<x-admin.badge tone="red" icon="triangle-exclamation">GPS PALSU</x-admin.badge>@endif</td>
+                            <template x-for="ping in rows" :key="ping.id">
+                                <tr :class="ping.is_mock_location ? 'bg-mr-50' : ''">
+                                    <td class="tabular whitespace-nowrap" x-text="new Date(ping.recorded_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })"></td>
+                                    <td class="tabular whitespace-nowrap" x-text="`${ping.latitude.toFixed(6)}, ${ping.longitude.toFixed(6)}`"></td>
+                                    <td class="tabular whitespace-nowrap" :class="ping.accuracy_m > 50 ? 'font-semibold text-amber-800' : ''" x-text="ping.accuracy_m !== null ? `${ping.accuracy_m} m` : '-'"></td>
+                                    <td class="tabular whitespace-nowrap" x-text="`${ping.speed_kmh ?? '-'} km/j`"></td>
+                                    <td class="tabular" x-text="ping.heading !== null ? `${ping.heading}°` : '-'"></td>
+                                    <td class="tabular" :class="ping.battery_level !== null && ping.battery_level < 20 ? 'font-semibold text-mr-700' : ''" x-text="ping.battery_level !== null ? `${ping.battery_level}%` : '-'"></td>
+                                    <td x-text="ping.provider ?? '-'"></td>
+                                    <td class="tabular">
+                                        <a x-show="ping.report_id" :href="`/admin/reports/${ping.report_id}`" class="hover:text-mr-700" x-text="`#${ping.report_id}`"></a>
+                                        <span x-show="!ping.report_id">-</span>
+                                    </td>
+                                    <td><span x-show="ping.is_mock_location"><x-admin.badge tone="red" icon="triangle-exclamation">GPS PALSU</x-admin.badge></span></td>
                                 </tr>
-                            @endforeach
+                            </template>
                         </tbody>
                     </table>
                 </div>
-                <div class="border-t border-stone-100 px-4 py-3">{{ $pings->links() }}</div>
-            @endif
-        </section>
-    @endif
+                <x-admin.api-pagination />
+            </section>
+        </div>
+    </div>
+    </div>
 </x-admin.layout>

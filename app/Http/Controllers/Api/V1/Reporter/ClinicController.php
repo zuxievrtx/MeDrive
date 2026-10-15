@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 
 /**
  * Daftar faskes tujuan (klinik aktif) untuk form ibu hamil dan pengantaran jenazah.
+ *
+ * @group Pelapor
  */
 class ClinicController extends ApiController
 {

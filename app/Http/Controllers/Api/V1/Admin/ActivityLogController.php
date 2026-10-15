@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Log aktivitas admin: hanya baca.
+ *
+ * @group Admin
  */
 class ActivityLogController extends ApiController
 {

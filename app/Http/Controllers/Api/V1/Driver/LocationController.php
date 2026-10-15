@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * Ping lokasi batch. Respons memuat next_interval_seconds yang wajib dipatuhi aplikasi.
+ *
+ * @group Driver
  */
 class LocationController extends ApiController
 {

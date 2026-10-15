@@ -74,7 +74,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::post('shifts/close', [Driver\ShiftController::class, 'close'])->name('shifts.close');
                     Route::get('dispatches/active', [Driver\DispatchController::class, 'active'])->name('dispatches.active');
                     Route::get('dispatches/{dispatch}', [Driver\DispatchController::class, 'show'])->name('dispatches.show');
-                    Route::post('dispatches/{dispatch}/accept', [Driver\DispatchController::class, 'accept'])->name('dispatches.accept');
+                    Route::post('dispatches/{dispatch}/accept', [Driver\DispatchController::class, 'accept'])->middleware('idempotent')->name('dispatches.accept');
                     Route::get('reports/history', [Driver\ReportController::class, 'history'])->name('reports.history');
                     Route::get('reports/{report}', [Driver\ReportController::class, 'show'])->name('reports.show');
                     Route::post('reports/{report}/status', [Driver\ReportController::class, 'status'])->middleware('idempotent')->name('reports.status');

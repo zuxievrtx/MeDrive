@@ -3,9 +3,12 @@ const POLL_INTERVAL = Number(document.querySelector('meta[name="poll-interval"]'
 /**
  * Berlangganan event privat Reverb; bila websocket tidak tersedia/terputus, jalankan polling
  * setiap 10 detik sampai koneksi pulih. onMode menerima 'realtime' atau 'polling' untuk indikator UI.
+ *
+ * events: { NamaEvent: handler } atau gunakan event + onEvent untuk satu event.
  */
-export function subscribe({ channel, event, onEvent, poll, onMode = () => {} }) {
+export function subscribe({ channel, event, onEvent, events = {}, poll, onMode = () => {} }) {
     let timer = null;
+    const handlers = event ? { ...events, [event]: onEvent } : events;
 
     const startPolling = () => {
         if (timer || !poll) {
@@ -29,7 +32,7 @@ export function subscribe({ channel, event, onEvent, poll, onMode = () => {} }) 
     }
 
     const privateChannel = window.Echo.private(channel);
-    privateChannel.listen(`.${event}`, onEvent);
+    Object.entries(handlers).forEach(([name, handler]) => privateChannel.listen(`.${name}`, handler));
     privateChannel.error?.(() => startPolling());
 
     const connection = window.Echo.connector?.pusher?.connection;

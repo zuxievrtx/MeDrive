@@ -1,6 +1,8 @@
 import { getJson } from './http';
+import { getData } from './api';
 import { subscribe } from './realtime';
 import { escapeHtml } from './shell';
+import { apiAction } from './resources';
 
 const SIGNAL_LOST_MS = Number(document.querySelector('meta[name="signal-lost-seconds"]')?.content || 60) * 1000;
 const ON_DUTY_COLOR = '#b30000';
@@ -92,6 +94,7 @@ function mergeLocation(driver, payload) {
         speed_kmh: payload.speed_kmh,
         heading: payload.heading,
         battery_level: payload.battery_level ?? driver.battery_level,
+        is_mock_location: payload.is_mock_location ?? driver.is_mock_location,
         accuracy_m: payload.accuracy_m,
         is_on_duty: Boolean(payload.is_on_duty),
         report_code: payload.report_code,
@@ -121,7 +124,7 @@ function trackingMap({ dataUrl, compact = false }) {
         followId: null,
         selectedId: null,
         tick: 0,
-        endShift: { open: false, shiftId: null, name: '' },
+        endShift: { open: false, driverId: null, shiftId: null, name: '', submitting: false },
 
         async init() {
             try {
@@ -258,10 +261,11 @@ function trackingMap({ dataUrl, compact = false }) {
                 <div>${escapeHtml(driver.plate_number ?? '-')} · ${escapeHtml(driver.ambulance_type ?? '')}</div>
                 <div>${escapeHtml(driver.clinic_name ?? '')}</div>
                 ${report}
-                <div style="margin-top:4px;color:#57534e">${driver.speed_kmh ?? 0} km/j · update ${agoLabel(driver.recorded_at)}</div>
+                <div style="margin-top:4px;color:#57534e">${driver.speed_kmh ?? 0} km/j · baterai ${driver.battery_level ?? '-'}% · update ${agoLabel(driver.recorded_at)}</div>
+                ${driver.is_mock_location ? '<div style="margin-top:4px;color:#b91c1c;font-weight:600">Lokasi palsu (mock) terdeteksi</div>' : ''}
                 <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
                     <a class="btn-secondary" style="min-height:32px;padding:0 10px" href="${driver.history_url}">Riwayat Rute</a>
-                    <button type="button" class="btn-danger" style="min-height:32px;padding:0 10px" onclick="window.dispatchEvent(new CustomEvent('medrive:end-shift',{detail:{shiftId:${Number(driver.shift_id)},name:${escapeHtml(JSON.stringify(driver.name))}}}))">Akhiri Shift</button>
+                    <button type="button" class="btn-danger" style="min-height:32px;padding:0 10px" onclick="window.dispatchEvent(new CustomEvent('medrive:end-shift',{detail:{driverId:${Number(driver.driver_id)},shiftId:${Number(driver.shift_id)},name:${escapeHtml(JSON.stringify(driver.name))}}}))">Akhiri Shift</button>
                 </div>
             </div>`;
         },
@@ -279,8 +283,26 @@ function trackingMap({ dataUrl, compact = false }) {
             this.followId = null;
         },
 
-        openEndShift({ shiftId, name }) {
-            this.endShift = { open: true, shiftId, name };
+        openEndShift({ driverId, shiftId, name }) {
+            this.endShift = { open: true, driverId, shiftId, name, submitting: false };
+        },
+
+        async confirmEndShift() {
+            this.endShift.submitting = true;
+            try {
+                await apiAction(`/api/v1/admin/drivers/${this.endShift.driverId}/shifts/${this.endShift.shiftId}/end`, {
+                    successMessage: `Shift ${this.endShift.name} telah diakhiri.`,
+                });
+                this.endShift.open = false;
+                map?.closePopup();
+                await this.refresh();
+            } catch {
+                // pesan error sudah ditampilkan apiFetch; data dimuat ulang agar sinkron
+                this.endShift.open = false;
+                await this.refresh();
+            } finally {
+                this.endShift.submitting = false;
+            }
         },
 
         isStale,
@@ -288,45 +310,84 @@ function trackingMap({ dataUrl, compact = false }) {
     };
 }
 
-function reportMap({ pickup, destination, driver, typeColor }) {
+/**
+ * Peta detail laporan. Data datang dari event medrive:report-loaded (reportDetail memuat dari API);
+ * marker driver diperbarui setiap laporan dimuat ulang.
+ */
+function reportMap() {
+    let map = null;
+    let driverMarker = null;
+
     return {
         error: null,
-        async init() {
+        hasDestination: false,
+        hasDriver: false,
+        typeColor: ON_DUTY_COLOR,
+
+        init() {
+            window.addEventListener('medrive:report-loaded', (event) => this.render(event.detail));
+        },
+
+        async render(report) {
             try {
                 const L = await loadLeaflet();
-                const map = createMap(L, this.$refs.map, { center: [pickup.lat, pickup.lng], zoom: 15 });
-                const points = [[pickup.lat, pickup.lng]];
+                const pickup = { lat: report.latitude, lng: report.longitude };
+                const destination =
+                    report.destination?.latitude != null
+                        ? {
+                              lat: report.destination.latitude,
+                              lng: report.destination.longitude,
+                              name: report.destination.name,
+                          }
+                        : null;
+                const location = report.driver?.last_location;
+                const driver = location
+                    ? {
+                          lat: location.latitude,
+                          lng: location.longitude,
+                          heading: location.heading,
+                          recorded_at: location.recorded_at,
+                          is_on_duty: true,
+                          icon: report.ambulance?.map_icon,
+                          name: report.driver.name,
+                          plate_number: report.ambulance?.plate_number,
+                      }
+                    : null;
 
-                L.marker([pickup.lat, pickup.lng], { icon: pinIcon(L, typeColor || ON_DUTY_COLOR, 'location-dot') })
-                    .bindPopup('<strong>Lokasi jemput</strong>')
-                    .addTo(map);
+                this.typeColor = report.report_type?.color || ON_DUTY_COLOR;
+                this.hasDestination = Boolean(destination);
+                this.hasDriver = Boolean(driver);
 
-                if (destination) {
-                    points.push([destination.lat, destination.lng]);
-                    L.marker([destination.lat, destination.lng], { icon: pinIcon(L, '#1c1917', 'flag-checkered') })
-                        .bindPopup(`<strong>Tujuan</strong><br>${escapeHtml(destination.name ?? '')}`)
+                if (!map) {
+                    map = createMap(L, this.$refs.map, { center: [pickup.lat, pickup.lng], zoom: 15 });
+                    const points = [[pickup.lat, pickup.lng]];
+
+                    L.marker([pickup.lat, pickup.lng], { icon: pinIcon(L, this.typeColor, 'location-dot') })
+                        .bindPopup('<strong>Lokasi jemput</strong>')
                         .addTo(map);
-                    L.polyline(
-                        [
-                            [pickup.lat, pickup.lng],
-                            [destination.lat, destination.lng],
-                        ],
-                        {
-                            color: '#1c1917',
-                            weight: 3,
-                            dashArray: '6 6',
-                        },
-                    ).addTo(map);
+
+                    if (destination) {
+                        points.push([destination.lat, destination.lng]);
+                        L.marker([destination.lat, destination.lng], { icon: pinIcon(L, '#1c1917', 'flag-checkered') })
+                            .bindPopup(`<strong>Tujuan</strong><br>${escapeHtml(destination.name ?? '')}`)
+                            .addTo(map);
+                        L.polyline(
+                            [
+                                [pickup.lat, pickup.lng],
+                                [destination.lat, destination.lng],
+                            ],
+                            { color: '#1c1917', weight: 3, dashArray: '6 6' },
+                        ).addTo(map);
+                    }
+
+                    if (driver) points.push([driver.lat, driver.lng]);
+                    if (points.length > 1) map.fitBounds(points, { padding: [40, 40], maxZoom: 16 });
                 }
 
-                if (driver) {
-                    points.push([driver.lat, driver.lng]);
-                    L.marker([driver.lat, driver.lng], { icon: ambulanceIcon(L, driver) }).addTo(map);
-                }
-
-                if (points.length > 1) {
-                    map.fitBounds(points, { padding: [40, 40], maxZoom: 16 });
-                }
+                driverMarker?.remove();
+                driverMarker = driver
+                    ? L.marker([driver.lat, driver.lng], { icon: ambulanceIcon(L, driver) }).addTo(map)
+                    : null;
             } catch {
                 this.error = 'Peta gagal dimuat.';
             }
@@ -354,15 +415,33 @@ function pointMap({ point }) {
  * Log Lokasi: rute historis dari driver_location_logs, playback, dan titik baru real-time
  * (event DriverLocationUpdated / polling driver_last_locations) bila driver sedang shift.
  */
-function locationLogMap({ dataUrl, trackingUrl, params, live }) {
+/**
+ * Nilai input datetime-local (WIB) dari ISO string.
+ */
+function toLocalInput(iso) {
+    return new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16).replace(' ', 'T');
+}
+
+/**
+ * Log Lokasi: filter, rute + ringkasan (/admin/location-logs), tabel ping (apiList terpisah), dan mode realtime
+ * bila driver masih shift dan rentang berakhir di "sekarang".
+ */
+function locationLogMap({ routeUrl, trackingUrl }) {
     let L = null;
     let map = null;
     let routeLayer = null;
     let playbackMarker = null;
+    let subscribed = false;
 
     return {
-        loading: true,
+        filters: { driver_id: '', report_id: '', from: '', to: '', accurate_only: false },
+        errors: {},
+        loading: false,
+        loaded: false,
         error: null,
+        driver: null,
+        report: null,
+        isLive: false,
         points: [],
         livePoints: [],
         summary: null,
@@ -372,49 +451,104 @@ function locationLogMap({ dataUrl, trackingUrl, params, live }) {
         timer: null,
 
         async init() {
+            const query = new URLSearchParams(window.location.search);
+            ['driver_id', 'report_id', 'from', 'to'].forEach((key) => {
+                if (query.has(key)) this.filters[key] = query.get(key);
+            });
+            this.filters.accurate_only = query.get('accurate_only') === '1';
+
             try {
                 L = await loadLeaflet();
                 map = createMap(L, this.$refs.map);
                 routeLayer = L.layerGroup().addTo(map);
             } catch {
                 this.error = 'Peta gagal dimuat.';
-                this.loading = false;
+            }
+
+            if (this.filters.driver_id) await this.load();
+        },
+
+        params() {
+            return {
+                driver_id: this.filters.driver_id,
+                report_id: this.filters.report_id || null,
+                from: this.filters.from || null,
+                to: this.filters.to || null,
+                accurate_only: this.filters.accurate_only ? 1 : null,
+            };
+        },
+
+        submit() {
+            if (!this.filters.driver_id) {
+                this.errors = { driver_id: ['Pilih driver terlebih dahulu.'] };
                 return;
             }
-            await this.load();
+            this.load();
+        },
 
-            if (live) {
-                subscribe({
-                    channel: 'admin.tracking',
-                    event: 'DriverLocationUpdated',
-                    onEvent: (payload) => {
-                        if (Number(payload.driver_id) === Number(params.driver_id)) this.appendLive(payload);
-                    },
-                    poll: () => this.pollLive(),
-                    onMode: (mode) => (this.mode = mode),
-                });
-            }
+        clearReport() {
+            this.filters.report_id = '';
+            this.filters.from = '';
+            this.filters.to = '';
+            this.load();
         },
 
         async load() {
-            if (!params.driver_id) {
-                this.loading = false;
-                return;
-            }
+            this.pause();
+            this.loading = true;
+            this.errors = {};
+            this.error = null;
             try {
-                const data = await getJson(dataUrl, params);
-                this.points = data.points;
+                const data = await getData(routeUrl, this.params(), { silent: true });
+                this.driver = data.driver;
+                this.report = data.report;
+                this.isLive = data.is_live;
                 this.summary = data.summary;
+                this.points = data.points;
+                this.livePoints = [];
                 this.position = Math.max(0, this.points.length - 1);
-                this.draw();
+                this.filters.from = toLocalInput(data.range.from);
+                this.filters.to = toLocalInput(data.range.to);
+                this.loaded = true;
+                this.syncQuery();
+                window.dispatchEvent(new CustomEvent('medrive:location-range', { detail: this.params() }));
+                this.$nextTick(() => {
+                    map?.invalidateSize();
+                    this.draw();
+                });
+                if (this.isLive) this.subscribeLive();
             } catch (error) {
-                this.error = error.message;
+                if (error.isValidation) this.errors = error.details;
+                else this.error = error.message;
             } finally {
                 this.loading = false;
             }
         },
 
+        syncQuery() {
+            const query = new URLSearchParams();
+            Object.entries(this.params()).forEach(([key, value]) => {
+                if (value !== null && value !== '') query.set(key, value);
+            });
+            history.replaceState(null, '', `${window.location.pathname}?${query}`);
+        },
+
+        subscribeLive() {
+            if (subscribed) return;
+            subscribed = true;
+            subscribe({
+                channel: 'admin.tracking',
+                event: 'DriverLocationUpdated',
+                onEvent: (payload) => {
+                    if (this.isLive && Number(payload.driver_id) === Number(this.driver?.id)) this.appendLive(payload);
+                },
+                poll: () => this.pollLive(),
+                onMode: (mode) => (this.mode = mode),
+            });
+        },
+
         draw() {
+            if (!map) return;
             routeLayer.clearLayers();
             const latlngs = this.points.map((point) => [point.lat, point.lng]);
             if (latlngs.length === 0) return;
@@ -502,7 +636,7 @@ function locationLogMap({ dataUrl, trackingUrl, params, live }) {
 
         appendLive(payload) {
             const last = this.points.at(-1);
-            if (last && last.recorded_at >= payload.recorded_at) return;
+            if (last && new Date(last.recorded_at) >= new Date(payload.recorded_at)) return;
             const point = {
                 lat: Number(payload.lat),
                 lng: Number(payload.lng),
@@ -511,7 +645,7 @@ function locationLogMap({ dataUrl, trackingUrl, params, live }) {
                 battery_level: payload.battery_level,
                 accuracy_m: payload.accuracy_m,
                 recorded_at: payload.recorded_at,
-                mock: false,
+                mock: Boolean(payload.is_mock_location),
                 live: true,
             };
             this.points.push(point);
@@ -521,10 +655,11 @@ function locationLogMap({ dataUrl, trackingUrl, params, live }) {
         },
 
         async pollLive() {
+            if (!this.isLive || !this.driver) return;
             try {
-                const data = await getJson(trackingUrl, { driver_id: params.driver_id });
+                const data = await getJson(trackingUrl, { driver_id: this.driver.id });
                 const driver = data.drivers[0];
-                if (driver) this.appendLive({ ...driver, driver_id: driver.driver_id });
+                if (driver && driver.lat !== null) this.appendLive(driver);
             } catch {
                 // dicoba lagi pada interval berikutnya
             }

@@ -13,8 +13,10 @@ use App\Models\User;
 use App\Services\EscalationService;
 use App\Services\ReportService;
 use Database\Seeders\MasterDataSeeder;
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -90,6 +92,24 @@ it('generates unique sequential codes even when the next number is already taken
     $created = $this->postJson('/api/v1/reporter/reports', medicalReportPayload())->assertCreated()->json('data.code');
 
     expect($created)->not->toBe($code)->and(substr($created, -4))->toBe('0002');
+});
+
+it('still creates and dispatches a report when the Reverb server is down', function () {
+    config([
+        'broadcasting.default' => 'reverb',
+        'broadcasting.connections.reverb.options.host' => '127.0.0.1',
+        'broadcasting.connections.reverb.options.port' => 1,
+        'broadcasting.connections.reverb.options.scheme' => 'http',
+    ]);
+    app(BroadcastManager::class)->purge('reverb');
+    Log::spy();
+    $driver = onShiftDriver(...pointNorthOf(SITE_LAT, SITE_LNG, 1));
+
+    actingAsMobile($this->reporter);
+    $reportId = $this->postJson('/api/v1/reporter/reports', medicalReportPayload())->assertCreated()->json('data.id');
+
+    expect(ReportDispatch::query()->where('report_id', $reportId)->where('driver_id', $driver->id)->exists())->toBeTrue();
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $message): bool => str_contains($message, 'Broadcast realtime gagal'))->atLeast()->once();
 });
 
 it('replays the same response for a repeated Idempotency-Key', function () {
@@ -268,6 +288,23 @@ it('walks a report through the driver status flow', function () {
         ->and($report->completed_at)->not->toBeNull()
         ->and(DriverProfile::query()->where('user_id', $driver->id)->value('is_on_duty'))->toBeFalse()
         ->and(ReportStatusLog::query()->where('report_id', $reportId)->count())->toBe(5);
+});
+
+it('replays a repeated driver status change instead of failing on the second tap', function () {
+    $driver = onShiftDriver(...pointNorthOf(SITE_LAT, SITE_LNG, 1));
+    actingAsMobile($this->reporter);
+    $reportId = $this->postJson('/api/v1/reporter/reports', medicalReportPayload())->assertCreated()->json('data.id');
+
+    actingAsMobile($driver);
+    $this->postJson('/api/v1/driver/dispatches/'.ReportDispatch::query()->where('report_id', $reportId)->value('id').'/accept')->assertOk();
+
+    $headers = ['Idempotency-Key' => 'status-berangkat-1'];
+    $this->postJson("/api/v1/driver/reports/{$reportId}/status", ['status' => 'dalam_perjalanan'], $headers)->assertOk();
+    $this->postJson("/api/v1/driver/reports/{$reportId}/status", ['status' => 'dalam_perjalanan'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true');
+
+    expect(ReportStatusLog::query()->where('report_id', $reportId)->where('to_status', 'dalam_perjalanan')->count())->toBe(1);
 });
 
 it('requires the delivery step for report types with a destination', function () {

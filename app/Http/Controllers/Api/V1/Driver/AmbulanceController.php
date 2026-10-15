@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 
 /**
  * Ambulans yang bisa dipilih saat membuka shift: milik klinik driver, tersedia, dan tidak sedang dipakai.
+ *
+ * @group Driver
  */
 class AmbulanceController extends ApiController
 {

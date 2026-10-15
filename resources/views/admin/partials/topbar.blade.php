@@ -23,12 +23,15 @@
         <div class="text-xs text-stone-600" x-text="date"></div>
     </div>
 
-    <div class="relative" x-data="notifications(@js(['url' => route('admin.notifications'), 'pendingCount' => $pendingReportCount, 'lastReportId' => $lastReportId]))"
+    <div class="relative" x-data="notifications(@js(['url' => route('api.v1.admin.notifications'), 'escalationsUrl' => route('api.v1.admin.escalations')]))"
          @keydown.escape.window="open = false" @click.outside="open = false">
         <button type="button" @click="toggle()" class="relative grid size-10 place-items-center rounded-lg text-stone-700 hover:bg-stone-100"
                 :aria-expanded="open" aria-haspopup="true"
                 :aria-label="`Notifikasi, ${pendingCount} laporan menunggu`">
             <i class="fa-solid fa-bell"></i>
+            <span x-show="$store.escalations.alarmCount > 0" x-cloak
+                  class="absolute -bottom-0.5 -left-0.5 size-3 rounded-full border-2 border-white bg-mr-600 motion-safe:animate-pulse"
+                  :title="`${$store.escalations.alarmCount} laporan dialarmkan`"></span>
             <span x-show="pendingCount > 0" x-cloak
                   class="tabular absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-mr-600 px-1 text-[11px] font-bold text-white"
                   x-text="pendingCount > 99 ? '99+' : pendingCount"></span>

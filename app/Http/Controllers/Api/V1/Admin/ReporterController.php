@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Pengguna pelapor: daftar, ringkasan perangkat/laporan, dan aktif/nonaktif akun.
+ *
+ * @group Admin
  */
 class ReporterController extends ApiController
 {

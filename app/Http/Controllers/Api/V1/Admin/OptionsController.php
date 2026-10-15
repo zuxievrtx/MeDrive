@@ -21,6 +21,8 @@ use Illuminate\Http\Request;
 
 /**
  * Data pilihan untuk dropdown filter dan form dashboard. ?only=clinics,institutions membatasi isi.
+ *
+ * @group Admin
  */
 class OptionsController extends ApiController
 {

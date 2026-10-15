@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Monitoring laporan. Admin tidak membuat laporan dan tidak menugaskan driver; hanya membatalkan laporan menunggu.
+ *
+ * @group Admin
  */
 class ReportController extends ApiController
 {

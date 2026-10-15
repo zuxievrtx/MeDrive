@@ -26,6 +26,8 @@ use Illuminate\Validation\Rules\Password;
 
 /**
  * Manajemen driver oleh admin pusat. Driver tidak bisa registrasi mandiri.
+ *
+ * @group Admin
  */
 class DriverController extends ApiController
 {

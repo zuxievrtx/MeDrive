@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 
 /**
  * Data kepegawaian driver: klinik dan instansi, SIM, sertifikat beserta masa berlaku.
+ *
+ * @group Driver
  */
 class ProfileController extends ApiController
 {

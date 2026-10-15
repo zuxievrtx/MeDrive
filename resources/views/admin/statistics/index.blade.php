@@ -1,5 +1,8 @@
+@php
+    $ranges = \App\Services\StatisticsService::RANGES;
+@endphp
 <x-admin.layout title="Statistik dan grafik">
-    <div x-data="statisticsPage({ dataUrl: @js(route('admin.statistics.data')), exportUrl: @js(route('admin.statistics.export')), initial: @js($initial) })">
+    <div x-data="statisticsPage({ dataUrl: @js(route('api.v1.admin.statistics')), exportUrl: @js(route('api.v1.admin.statistics.export')), ranges: @js(array_keys($ranges)) })">
         <x-admin.page-header title="Statistik dan grafik" description="Semua angka dihitung langsung dari data laporan dan dibandingkan dengan periode sebelumnya yang sama panjang.">
             <x-slot:actions>
                 <a :href="exportHref" class="btn-secondary"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export CSV</a>
@@ -18,7 +21,7 @@
                 <div>
                     <label for="year" class="form-label">Tahun</label>
                     <select id="year" x-model.number="year" @change="load()" class="form-input">
-                        @foreach ($years as $year)<option value="{{ $year }}">{{ $year }}</option>@endforeach
+                        <template x-for="item in data?.available_years ?? [year]" :key="item"><option :value="item" x-text="item" :selected="item === year"></option></template>
                     </select>
                 </div>
             </div>

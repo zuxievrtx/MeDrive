@@ -11,13 +11,22 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * @group Admin
+ */
 class StatisticsController extends ApiController
 {
     public function index(Request $request, StatisticsService $statistics): JsonResponse
     {
         Gate::authorize('viewAny', Report::class);
 
-        return $this->ok($statistics->forRange($this->validated($request))->payload());
+        $firstReportAt = Report::query()->min('created_at');
+        $firstYear = $firstReportAt ? (int) substr((string) $firstReportAt, 0, 4) : now()->year;
+
+        return $this->ok([
+            ...$statistics->forRange($this->validated($request))->payload(),
+            'available_years' => range(now()->year, min($firstYear, now()->year)),
+        ]);
     }
 
     public function export(Request $request, StatisticsService $statistics): StreamedResponse

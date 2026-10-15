@@ -1,0 +1,2242 @@
+openapi: 3.0.3
+info:
+  title: 'Medrive API v1'
+  description: 'API untuk aplikasi Pelapor, aplikasi Driver, dan dashboard Admin Medrive.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+tags:
+  -
+    name: Autentikasi
+    description: ''
+  -
+    name: Pelapor
+    description: ''
+  -
+    name: Driver
+    description: ''
+  -
+    name: Admin
+    description: ''
+  -
+    name: 'Berkas privat'
+    description: ''
+  -
+    name: Endpoints
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Token didapat dari <code>POST /api/v1/auth/login</code> (pelapor/driver). Endpoint admin memakai cookie session dashboard.'
+security:
+  -
+    default: []
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: 'Daftar akun pelapor'
+      operationId: daftarAkunPelapor
+      description: 'Role selalu pelapor; driver hanya didaftarkan admin. Mengembalikan token Sanctum (ability reporter).'
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                phone:
+                  type: string
+                  description: 'Must match the regex /^[0-9+\-\s]{8,20}$/. Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 100 characters.'
+                  example: breitenberg.gilbert@example.com
+                password:
+                  type: string
+                  description: ''
+                  example: '|]|{+-'
+                device_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: v
+                  nullable: true
+              required:
+                - name
+                - phone
+                - email
+                - password
+      security: []
+  /api/v1/auth/login:
+    post:
+      summary: 'Masuk (pelapor / driver)'
+      operationId: masukpelaporDriver
+      description: 'Akun admin ditolak (admin_use_dashboard). Token membawa ability sesuai role: reporter atau driver.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: gbailey@example.net
+                password:
+                  type: string
+                  description: ''
+                  example: '|]|{+-'
+                device_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: v
+                  nullable: true
+              required:
+                - email
+                - password
+      security: []
+  /api/v1/auth/logout:
+    post:
+      summary: 'Keluar (mencabut token yang dipakai)'
+      operationId: keluarmencabutTokenYangDipakai
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+  /api/v1/auth/fcm:
+    post:
+      summary: 'Daftarkan / perbarui token FCM perangkat'
+      operationId: daftarkanPerbaruiTokenFCMPerangkat
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fcm_token:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+                platform:
+                  type: string
+                  description: ''
+                  example: web
+                  enum:
+                    - android
+                    - ios
+                    - web
+                device_model:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                  nullable: true
+                app_version:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: gzmiyvdljnikhway
+                  nullable: true
+              required:
+                - fcm_token
+                - platform
+  /api/v1/auth/change-password:
+    post:
+      summary: 'Ganti password'
+      operationId: gantiPassword
+      description: 'Wajib saat must_change_password = true. Token lain milik akun dicabut.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                  description: ''
+                  example: architecto
+                password:
+                  type: string
+                  description: 'The value and <code>current_password</code> must be different.'
+                  example: '|]|{+-'
+              required:
+                - current_password
+                - password
+  /api/v1/me:
+    get:
+      summary: 'Profil akun yang sedang masuk'
+      operationId: profilAkunYangSedangMasuk
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Autentikasi
+  /api/v1/reporter/reports:
+    post:
+      summary: ''
+      operationId: postApiV1ReporterReports
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                report_type_code:
+                  type: string
+                  description: 'Must match an existing stored value.'
+                  example: architecto
+                latitude:
+                  type: number
+                  description: 'Must be between -90 and 90.'
+                  example: -89
+                longitude:
+                  type: number
+                  description: 'Must be between -180 and 180.'
+                  example: -180
+                address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: z
+                  nullable: true
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Velit et fugiat sunt nihil accusantium.'
+                destination_clinic_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                  nullable: true
+                destination_name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: 'n'
+                  nullable: true
+                destination_address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                destination_lat:
+                  type: number
+                  description: 'This field is required when <code>destination_lng</code> is present. Must be between -90 and 90.'
+                  example: -89
+                  nullable: true
+                destination_lng:
+                  type: number
+                  description: 'This field is required when <code>destination_lat</code> is present. Must be between -180 and 180.'
+                  example: -180
+                  nullable: true
+                photos:
+                  type: array
+                  description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+                  items:
+                    type: string
+                    format: binary
+                death_certificate:
+                  type: string
+                  format: binary
+                  description: 'Must be a file. Must not be greater than 2048 kilobytes.'
+                  nullable: true
+              required:
+                - report_type_code
+                - latitude
+                - longitude
+                - description
+    get:
+      summary: ''
+      operationId: getApiV1ReporterReports
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: ''
+                  example: null
+                  nullable: true
+                type:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: b
+                  nullable: true
+  /api/v1/reporter/clinics:
+    get:
+      summary: ''
+      operationId: getApiV1ReporterClinics
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+  '/api/v1/reporter/reports/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1ReporterReportsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/reporter/reports/{report_id}/driver-location':
+    get:
+      summary: 'Posisi ambulans live untuk fallback polling (websocket report.{id} adalah jalur utama).'
+      operationId: posisiAmbulansLiveUntukFallbackPollingwebsocketReportidAdalahJalurUtama
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/driver/location:
+    post:
+      summary: ''
+      operationId: postApiV1DriverLocation
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                points:
+                  type: object
+                  description: 'Must have at least 1 items. Must not have more than 10 items.'
+                  example: []
+                  properties: {  }
+                device:
+                  type: object
+                  description: ''
+                  example: null
+                  properties:
+                    fcm_token:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: b
+                      nullable: true
+                    app_version:
+                      type: string
+                      description: 'Must not be greater than 20 characters.'
+                      example: ngzmiyvdljnikhwa
+                      nullable: true
+                    device_model:
+                      type: string
+                      description: 'Must not be greater than 100 characters.'
+                      example: 'y'
+                      nullable: true
+                  nullable: true
+              required:
+                - points
+  /api/v1/driver/profile:
+    get:
+      summary: ''
+      operationId: getApiV1DriverProfile
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+  /api/v1/driver/ambulances/available:
+    get:
+      summary: ''
+      operationId: getApiV1DriverAmbulancesAvailable
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+  /api/v1/driver/shifts:
+    post:
+      summary: ''
+      operationId: postApiV1DriverShifts
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ambulance_id:
+                  type: integer
+                  description: ''
+                  example: 16
+              required:
+                - ambulance_id
+  /api/v1/driver/shifts/close:
+    post:
+      summary: ''
+      operationId: postApiV1DriverShiftsClose
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: 'Must be at least 3 characters. Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - reason
+  /api/v1/driver/dispatches/active:
+    get:
+      summary: ''
+      operationId: getApiV1DriverDispatchesActive
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+  '/api/v1/driver/dispatches/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1DriverDispatchesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the dispatch.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/dispatches/{dispatch_id}/accept':
+    post:
+      summary: ''
+      operationId: postApiV1DriverDispatchesDispatch_idAccept
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+    parameters:
+      -
+        in: path
+        name: dispatch_id
+        description: 'The ID of the dispatch.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/driver/reports/history:
+    get:
+      summary: ''
+      operationId: getApiV1DriverReportsHistory
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+  '/api/v1/driver/reports/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1DriverReportsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/reports/{report_id}/status':
+    post:
+      summary: ''
+      operationId: postApiV1DriverReportsReport_idStatus
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: ''
+                  example: dalam_perjalanan
+                  enum:
+                    - dalam_perjalanan
+                    - tiba_di_lokasi
+                    - mengantar_pasien
+                    - selesai
+                latitude:
+                  type: number
+                  description: 'This field is required when <code>longitude</code> is present. Must be between -90 and 90.'
+                  example: -89
+                  nullable: true
+                longitude:
+                  type: number
+                  description: 'This field is required when <code>latitude</code> is present. Must be between -180 and 180.'
+                  example: -179
+                  nullable: true
+                note:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+              required:
+                - status
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/reports/{report_id}/patients':
+    post:
+      summary: ''
+      operationId: postApiV1DriverReportsReport_idPatients
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                gender:
+                  type: string
+                  description: ''
+                  example: P
+                  enum:
+                    - L
+                    - P
+                  nullable: true
+                age_estimate:
+                  type: integer
+                  description: 'Must be between 0 and 130.'
+                  example: 1
+                  nullable: true
+                consciousness:
+                  type: string
+                  description: ''
+                  example: sadar
+                  enum:
+                    - sadar
+                    - tidak_sadar
+                    - tidak_diketahui
+                  nullable: true
+                is_breathing:
+                  type: boolean
+                  description: ''
+                  example: false
+                  nullable: true
+                condition_note:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                handed_over_to:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: z
+                  nullable: true
+                handed_over_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date before or equal to <code>now</code>.'
+                  example: '2022-11-09'
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/patients/{id}':
+    put:
+      summary: ''
+      operationId: putApiV1DriverPatientsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                gender:
+                  type: string
+                  description: ''
+                  example: P
+                  enum:
+                    - L
+                    - P
+                  nullable: true
+                age_estimate:
+                  type: integer
+                  description: 'Must be between 0 and 130.'
+                  example: 1
+                  nullable: true
+                consciousness:
+                  type: string
+                  description: ''
+                  example: tidak_diketahui
+                  enum:
+                    - sadar
+                    - tidak_sadar
+                    - tidak_diketahui
+                  nullable: true
+                is_breathing:
+                  type: boolean
+                  description: ''
+                  example: false
+                  nullable: true
+                condition_note:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                handed_over_to:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: z
+                  nullable: true
+                handed_over_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date before or equal to <code>now</code>.'
+                  example: '2022-11-09'
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the patient.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/reports/{report_id}/attachments':
+    post:
+      summary: ''
+      operationId: postApiV1DriverReportsReport_idAttachments
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photos:
+                  type: array
+                  description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+                  items:
+                    type: string
+                    format: binary
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/reports/export:
+    get:
+      summary: ''
+      operationId: getApiV1AdminReportsExport
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/statistics/export:
+    get:
+      summary: ''
+      operationId: getApiV1AdminStatisticsExport
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/dashboard/summary:
+    get:
+      summary: ''
+      operationId: getApiV1AdminDashboardSummary
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/notifications:
+    get:
+      summary: ''
+      operationId: getApiV1AdminNotifications
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/escalations:
+    get:
+      summary: ''
+      operationId: getApiV1AdminEscalations
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/options:
+    get:
+      summary: ''
+      operationId: getApiV1AdminOptions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  '/api/v1/admin/drivers/{driver_id}/shifts':
+    get:
+      summary: ''
+      operationId: getApiV1AdminDriversDriver_idShifts
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/reports':
+    get:
+      summary: ''
+      operationId: getApiV1AdminDriversDriver_idReports
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/reset-password':
+    post:
+      summary: ''
+      operationId: postApiV1AdminDriversDriver_idResetPassword
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: ''
+                  example: '|]|{+-'
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/deactivate':
+    post:
+      summary: ''
+      operationId: postApiV1AdminDriversDriver_idDeactivate
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/activate':
+    post:
+      summary: ''
+      operationId: postApiV1AdminDriversDriver_idActivate
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/shifts/{shift_id}/end':
+    post:
+      summary: ''
+      operationId: postApiV1AdminDriversDriver_idShiftsShift_idEnd
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift_id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/drivers/{driver_id}/certifications':
+    post:
+      summary: ''
+      operationId: postApiV1AdminDriversDriver_idCertifications
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                certificate_number:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                  nullable: true
+                issuer:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: g
+                  nullable: true
+                issued_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
+                  example: '2022-11-09'
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>issued_at</code>.'
+                  example: '2052-11-08'
+                  nullable: true
+                file:
+                  type: string
+                  format: binary
+                  description: 'Must be a file. Must not be greater than 5120 kilobytes.'
+                  nullable: true
+              required:
+                - name
+                - issued_at
+    parameters:
+      -
+        in: path
+        name: driver_id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/drivers:
+    get:
+      summary: ''
+      operationId: getApiV1AdminDrivers
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                clinic_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                institution_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                shift:
+                  type: string
+                  description: ''
+                  example: tidak
+                  enum:
+                    - aktif
+                    - tidak
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: aktif
+                  enum:
+                    - aktif
+                    - nonaktif
+                  nullable: true
+                sort:
+                  type: string
+                  description: ''
+                  example: null
+                  nullable: true
+                direction:
+                  type: string
+                  description: ''
+                  example: asc
+                  enum:
+                    - asc
+                    - desc
+                  nullable: true
+    post:
+      summary: 'Kredensial sementara dikembalikan sekali di respons ini; tidak bisa dibaca lagi setelahnya.'
+      operationId: kredensialSementaraDikembalikanSekaliDiResponsIniTidakBisaDibacaLagiSetelahnya
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                phone:
+                  type: string
+                  description: 'Must match the regex /^[0-9+\-\s]{8,20}$/. Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 100 characters.'
+                  example: breitenberg.gilbert@example.com
+                password:
+                  type: string
+                  description: ''
+                  example: '|]|{+-'
+                must_change_password:
+                  type: boolean
+                  description: ''
+                  example: false
+                clinic_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                employee_number:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: 'n'
+                  nullable: true
+                license_number:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: g
+                license_class:
+                  type: string
+                  description: ''
+                  example: B1_umum
+                  enum:
+                    - A
+                    - A_umum
+                    - B1
+                    - B1_umum
+                    - B2
+                    - B2_umum
+                license_expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after or equal to <code>tomorrow</code>.'
+                  example: '2052-11-09'
+                photo:
+                  type: string
+                  format: binary
+                  description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+                  nullable: true
+                certifications:
+                  type: array
+                  description: 'Must not have more than 10 items.'
+                  example: null
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: 'Must not be greater than 100 characters.'
+                        example: 'n'
+                      certificate_number:
+                        type: string
+                        description: 'Must not be greater than 50 characters.'
+                        example: g
+                        nullable: true
+                      issuer:
+                        type: string
+                        description: 'Must not be greater than 150 characters.'
+                        example: z
+                        nullable: true
+                      issued_at:
+                        type: string
+                        description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
+                        example: '2022-11-09'
+                      expires_at:
+                        type: string
+                        description: 'Must be a valid date. Must be a date after <code>certifications.*.issued_at</code>.'
+                        example: '2052-11-08'
+                        nullable: true
+                      file:
+                        type: string
+                        format: binary
+                        description: 'Must be a file. Must not be greater than 5120 kilobytes.'
+                        nullable: true
+                    required:
+                      - name
+                      - issued_at
+              required:
+                - name
+                - phone
+                - email
+                - password
+                - clinic_id
+                - license_number
+                - license_class
+                - license_expires_at
+  '/api/v1/admin/drivers/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminDriversId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminDriversId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                phone:
+                  type: string
+                  description: 'Must match the regex /^[0-9+\-\s]{8,20}$/. Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 100 characters.'
+                  example: breitenberg.gilbert@example.com
+                new_password:
+                  type: string
+                  description: ''
+                  example: architecto
+                  nullable: true
+                clinic_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                employee_number:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: 'n'
+                  nullable: true
+                license_number:
+                  type: string
+                  description: 'Must not be greater than 30 characters.'
+                  example: g
+                license_class:
+                  type: string
+                  description: ''
+                  example: B1_umum
+                  enum:
+                    - A
+                    - A_umum
+                    - B1
+                    - B1_umum
+                    - B2
+                    - B2_umum
+                license_expires_at:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-10-16T00:27:48'
+                photo:
+                  type: string
+                  format: binary
+                  description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+                  nullable: true
+              required:
+                - name
+                - phone
+                - email
+                - clinic_id
+                - license_number
+                - license_class
+                - license_expires_at
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the driver.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/certifications/{id}':
+    put:
+      summary: ''
+      operationId: putApiV1AdminCertificationsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                certificate_number:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                  nullable: true
+                issuer:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: g
+                  nullable: true
+                issued_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
+                  example: '2022-11-09'
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>issued_at</code>.'
+                  example: '2052-11-08'
+                  nullable: true
+                file:
+                  type: string
+                  format: binary
+                  description: 'Must be a file. Must not be greater than 5120 kilobytes.'
+                  nullable: true
+              required:
+                - name
+                - issued_at
+    delete:
+      summary: ''
+      operationId: deleteApiV1AdminCertificationsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the certification.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/institutions:
+    get:
+      summary: ''
+      operationId: getApiV1AdminInstitutions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                type:
+                  type: string
+                  description: ''
+                  example: pemerintah
+                  enum:
+                    - pemerintah
+                    - swasta
+                    - sosial
+                  nullable: true
+                active:
+                  type: string
+                  description: ''
+                  example: 1
+                  enum:
+                    - 1
+                    - 0
+                  nullable: true
+    post:
+      summary: ''
+      operationId: postApiV1AdminInstitutions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: bngzmiyvdljnikhw
+                name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: a
+                type:
+                  type: string
+                  description: ''
+                  example: pemerintah
+                  enum:
+                    - pemerintah
+                    - swasta
+                    - sosial
+                phone:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: ykcmyuwpwlvqwrsi
+                  nullable: true
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 100 characters.'
+                  example: pfritsch@example.com
+                  nullable: true
+                address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: c
+                  nullable: true
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - code
+                - name
+                - type
+  '/api/v1/admin/institutions/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminInstitutionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminInstitutionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: bngzmiyvdljnikhw
+                name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: a
+                type:
+                  type: string
+                  description: ''
+                  example: pemerintah
+                  enum:
+                    - pemerintah
+                    - swasta
+                    - sosial
+                phone:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: ykcmyuwpwlvqwrsi
+                  nullable: true
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 100 characters.'
+                  example: pfritsch@example.com
+                  nullable: true
+                address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: c
+                  nullable: true
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - code
+                - name
+                - type
+    delete:
+      summary: ''
+      operationId: deleteApiV1AdminInstitutionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the institution.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/clinics:
+    get:
+      summary: ''
+      operationId: getApiV1AdminClinics
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                institution_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                type:
+                  type: string
+                  description: ''
+                  example: puskesmas
+                  enum:
+                    - klinik
+                    - puskesmas
+                    - rumah_sakit
+                    - pos_ambulans
+                  nullable: true
+                active:
+                  type: string
+                  description: ''
+                  example: 0
+                  enum:
+                    - 1
+                    - 0
+                  nullable: true
+    post:
+      summary: ''
+      operationId: postApiV1AdminClinics
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                institution_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                code:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+                name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: 'y'
+                type:
+                  type: string
+                  description: ''
+                  example: pos_ambulans
+                  enum:
+                    - klinik
+                    - puskesmas
+                    - rumah_sakit
+                    - pos_ambulans
+                phone:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: kcmyuwpwlvqwrsit
+                  nullable: true
+                address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: c
+                latitude:
+                  type: number
+                  description: 'Must be between -90 and 90.'
+                  example: -89
+                longitude:
+                  type: number
+                  description: 'Must be between -180 and 180.'
+                  example: -180
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - institution_id
+                - code
+                - name
+                - type
+                - address
+                - latitude
+                - longitude
+  '/api/v1/admin/clinics/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminClinicsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminClinicsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                institution_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                code:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+                name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: 'y'
+                type:
+                  type: string
+                  description: ''
+                  example: puskesmas
+                  enum:
+                    - klinik
+                    - puskesmas
+                    - rumah_sakit
+                    - pos_ambulans
+                phone:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: kcmyuwpwlvqwrsit
+                  nullable: true
+                address:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: c
+                latitude:
+                  type: number
+                  description: 'Must be between -90 and 90.'
+                  example: -89
+                longitude:
+                  type: number
+                  description: 'Must be between -180 and 180.'
+                  example: -180
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - institution_id
+                - code
+                - name
+                - type
+                - address
+                - latitude
+                - longitude
+    delete:
+      summary: ''
+      operationId: deleteApiV1AdminClinicsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the clinic.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/ambulance-types:
+    get:
+      summary: ''
+      operationId: getApiV1AdminAmbulanceTypes
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  '/api/v1/admin/ambulance-types/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminAmbulanceTypesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminAmbulanceTypesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                description:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'Et animi quos velit et fugiat.'
+                  nullable: true
+              required:
+                - name
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the ambulance type.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/ambulances/{ambulance_id}/status':
+    patch:
+      summary: ''
+      operationId: patchApiV1AdminAmbulancesAmbulance_idStatus
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: ambulance_id
+        description: 'The ID of the ambulance.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/ambulances:
+    get:
+      summary: ''
+      operationId: getApiV1AdminAmbulances
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: bngzmiyvdljnikhw
+                  nullable: true
+                clinic_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                ambulance_type_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: perawatan
+                  enum:
+                    - tersedia
+                    - perawatan
+                    - nonaktif
+                  nullable: true
+    post:
+      summary: ''
+      operationId: postApiV1AdminAmbulances
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clinic_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                ambulance_type_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                plate_number:
+                  type: string
+                  description: 'Must match the regex /^[A-Z]{1,2} \d{1,4}( [A-Z]{1,3})?$/. Must not be greater than 15 characters.'
+                  example: 'n'
+                vehicle_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: g
+                  nullable: true
+                year:
+                  type: string
+                  description: 'Must be 4 digits. Must be at least 1980 characters. Must not be greater than 2027 characters.'
+                  example: z
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: nonaktif
+                  enum:
+                    - tersedia
+                    - perawatan
+                    - nonaktif
+                notes:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: m
+                  nullable: true
+              required:
+                - clinic_id
+                - ambulance_type_id
+                - plate_number
+                - status
+  '/api/v1/admin/ambulances/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminAmbulancesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminAmbulancesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clinic_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                ambulance_type_id:
+                  type: integer
+                  description: 'Must match an existing stored value.'
+                  example: 16
+                plate_number:
+                  type: string
+                  description: 'Must match the regex /^[A-Z]{1,2} \d{1,4}( [A-Z]{1,3})?$/. Must not be greater than 15 characters.'
+                  example: 'n'
+                vehicle_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: g
+                  nullable: true
+                year:
+                  type: string
+                  description: 'Must be 4 digits. Must be at least 1980 characters. Must not be greater than 2027 characters.'
+                  example: z
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: nonaktif
+                  enum:
+                    - tersedia
+                    - perawatan
+                    - nonaktif
+                notes:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: m
+                  nullable: true
+              required:
+                - clinic_id
+                - ambulance_type_id
+                - plate_number
+                - status
+    delete:
+      summary: ''
+      operationId: deleteApiV1AdminAmbulancesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the ambulance.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/report-types:
+    get:
+      summary: ''
+      operationId: getApiV1AdminReportTypes
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  '/api/v1/admin/report-types/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminReportTypesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminReportTypesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                description:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'Et animi quos velit et fugiat.'
+                  nullable: true
+                priority:
+                  type: integer
+                  description: 'Must be between 1 and 5.'
+                  example: 2
+                icon:
+                  type: string
+                  description: 'Must match the regex /^[a-z0-9-]+$/. Must not be greater than 50 characters.'
+                  example: l
+                  nullable: true
+                color:
+                  type: string
+                  description: 'Must match the regex /^#[0-9A-F]{6}$/.'
+                  example: '#5C489F'
+                  nullable: true
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: false
+                sort_order:
+                  type: integer
+                  description: 'Must be between 0 and 255.'
+                  example: 1
+                ambulance_type_ids:
+                  type: array
+                  description: 'Must match an existing stored value.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+              required:
+                - name
+                - priority
+                - sort_order
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report type.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/reports/{report_id}/cancel':
+    post:
+      summary: ''
+      operationId: postApiV1AdminReportsReport_idCancel
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: 'Must be at least 5 characters. Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - reason
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/reports:
+    get:
+      summary: ''
+      operationId: getApiV1AdminReports
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  '/api/v1/admin/reports/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminReportsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/tracking/live:
+    get:
+      summary: ''
+      operationId: getApiV1AdminTrackingLive
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/location-logs:
+    get:
+      summary: 'Rute untuk peta + ringkasan (jarak, kecepatan, baterai, jumlah GPS palsu).'
+      operationId: ruteUntukPeta+RingkasanjarakKecepatanBateraiJumlahGPSPalsu
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/location-logs/pings:
+    get:
+      summary: 'Tabel ping (paginated) pada rentang yang sama.'
+      operationId: tabelPingpaginatedPadaRentangYangSama
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/statistics:
+    get:
+      summary: ''
+      operationId: getApiV1AdminStatistics
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+  /api/v1/admin/activity-logs:
+    get:
+      summary: ''
+      operationId: getApiV1AdminActivityLogs
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                admin_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+                module:
+                  type: string
+                  description: 'Must contain only letters, numbers, dashes and underscores. Must not be greater than 30 characters.'
+                  example: 'n'
+                  nullable: true
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-10-16T00:27:48'
+                  nullable: true
+                to:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after or equal to <code>from</code>.'
+                  example: '2052-11-08'
+                  nullable: true
+  /api/v1/admin/users:
+    get:
+      summary: ''
+      operationId: getApiV1AdminUsers
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: nonaktif
+                  enum:
+                    - aktif
+                    - nonaktif
+                  nullable: true
+  '/api/v1/admin/users/{reporter_id}':
+    get:
+      summary: ''
+      operationId: getApiV1AdminUsersReporter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    put:
+      summary: ''
+      operationId: putApiV1AdminUsersReporter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Admin
+    parameters:
+      -
+        in: path
+        name: reporter_id
+        description: 'The ID of the reporter.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/media/{type}/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1MediaTypeId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Berkas privat'
+    parameters:
+      -
+        in: path
+        name: type
+        description: ''
+        example: driver-photo|certification|attachment
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: id
+        description: 'The ID of the {type}.'
+        example: '564'
+        required: true
+        schema:
+          type: string
+  /api/v1/broadcasting/auth:
+    get:
+      summary: 'Authenticate the request for channel access.'
+      operationId: authenticateTheRequestForChannelAccess
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints

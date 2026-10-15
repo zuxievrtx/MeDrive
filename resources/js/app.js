@@ -14,6 +14,9 @@ import { registerShell } from './admin/shell';
 import { registerForms } from './admin/forms';
 import { registerMaps } from './admin/maps';
 import { registerStatistics } from './admin/statistics';
+import { registerResources, apiAction } from './admin/resources';
+import { apiFetch, getData } from './admin/api';
+import { registerPages } from './admin/pages';
 
 window.Alpine = Alpine;
 Alpine.plugin(focus);
@@ -22,5 +25,10 @@ registerShell(Alpine);
 registerForms(Alpine);
 registerMaps(Alpine);
 registerStatistics(Alpine);
+registerResources(Alpine);
+registerPages(Alpine);
+
+// Dipakai ekspresi Alpine di template untuk aksi satu klik (hapus, aktifkan, batalkan).
+window.medrive = { api: apiFetch, action: apiAction, getData };
 
 Alpine.start();

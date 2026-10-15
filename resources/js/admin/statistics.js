@@ -30,13 +30,26 @@ function loadChart() {
 
 const percent = (value, total) => (total ? `${((value / total) * 100).toFixed(1)}%` : '0%');
 
-function trendChart({ labels, current, previous }) {
+function trendChart() {
     let chart = null;
     return {
         error: null,
-        async init() {
+        empty: false,
+        init() {
+            // Data tren datang dari ringkasan dashboard (fetch API), bukan dari render server.
+            window.addEventListener('medrive:dashboard-trend', (event) => this.draw(event.detail));
+        },
+        async draw({ labels, current, previous }) {
+            this.empty = current.every((value) => value === 0);
             try {
                 const Chart = await loadChart();
+                if (chart) {
+                    chart.data.labels = labels;
+                    chart.data.datasets[0].data = current;
+                    chart.data.datasets[1].data = previous;
+                    chart.update();
+                    return;
+                }
                 chart = new Chart(this.$refs.canvas, {
                     type: 'line',
                     data: {
@@ -79,8 +92,27 @@ function trendChart({ labels, current, previous }) {
 /**
  * Halaman Statistik: semua grafik diisi dari satu endpoint JSON agar rentang bisa diganti tanpa reload.
  */
-function statisticsPage({ dataUrl, exportUrl, initial }) {
+function localDate(date) {
+    return date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+}
+
+/**
+ * Rentang awal dari query string (bisa dibagikan), default 7 hari terakhir.
+ */
+function initialRange(ranges) {
+    const query = new URLSearchParams(window.location.search);
+    const now = new Date();
+    return {
+        range: ranges.includes(query.get('range')) ? query.get('range') : '7d',
+        year: Number(query.get('year')) || now.getFullYear(),
+        from: query.get('from') || localDate(new Date(now.getTime() - 13 * 86400000)),
+        to: query.get('to') || localDate(now),
+    };
+}
+
+function statisticsPage({ dataUrl, exportUrl, ranges }) {
     const charts = {};
+    const initial = initialRange(ranges);
 
     return {
         range: initial.range,
@@ -125,7 +157,9 @@ function statisticsPage({ dataUrl, exportUrl, initial }) {
                 await this.$nextTick();
                 await this.render();
             } catch (error) {
-                this.error = error.message;
+                this.error = error.isValidation
+                    ? (Object.values(error.details).flat()[0] ?? error.message)
+                    : error.message;
             } finally {
                 this.loading = false;
             }

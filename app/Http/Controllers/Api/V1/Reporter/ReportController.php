@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Laporan milik pelapor. Pelapor tidak bisa membatalkan laporan.
+ *
+ * @group Pelapor
  */
 class ReportController extends ApiController
 {

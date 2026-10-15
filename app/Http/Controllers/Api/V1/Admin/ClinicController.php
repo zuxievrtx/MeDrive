@@ -12,6 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Admin
+ */
 class ClinicController extends ApiController
 {
     public function __construct(private OrganizationService $organizations) {}

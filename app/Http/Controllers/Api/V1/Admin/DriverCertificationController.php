@@ -11,6 +11,9 @@ use App\Services\DriverAccountService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Admin
+ */
 class DriverCertificationController extends ApiController
 {
     public function __construct(private DriverAccountService $accounts) {}

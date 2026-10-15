@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 
 /**
  * Tawaran broadcast untuk driver. Push FCM adalah jalur utama; endpoint ini cadangan pull.
+ *
+ * @group Driver
  */
 class DispatchController extends ApiController
 {

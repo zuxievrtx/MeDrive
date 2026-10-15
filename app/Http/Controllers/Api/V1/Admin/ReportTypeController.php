@@ -11,6 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Admin
+ */
 class ReportTypeController extends ApiController
 {
     public function index(Request $request): JsonResponse

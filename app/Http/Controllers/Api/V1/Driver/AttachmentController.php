@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * Foto penanganan dari driver (type foto_penanganan).
+ *
+ * @group Driver
  */
 class AttachmentController extends ApiController
 {

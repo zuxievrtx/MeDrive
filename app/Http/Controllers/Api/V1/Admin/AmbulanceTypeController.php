@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Edit terbatas: kode jenis dipakai aturan broadcast sehingga tidak bisa diubah.
+ *
+ * @group Admin
  */
 class AmbulanceTypeController extends ApiController
 {

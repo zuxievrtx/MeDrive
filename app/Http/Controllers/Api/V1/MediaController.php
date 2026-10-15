@@ -17,6 +17,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Streaming berkas privat (foto driver, sertifikat, lampiran laporan) dengan otorisasi per jenis berkas.
  * Berkas tidak pernah punya URL publik.
+ *
+ * @group Berkas privat
  */
 class MediaController extends ApiController
 {

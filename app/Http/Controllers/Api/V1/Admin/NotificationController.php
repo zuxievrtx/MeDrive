@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 
 /**
  * Badge notifikasi topbar dan polling cadangan event ReportCreated.
+ *
+ * @group Admin
  */
 class NotificationController extends ApiController
 {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Api\ApiController;
 use App\Models\DriverShift;
+use App\Models\Report;
 use App\Models\User;
 use App\Services\LocationHistoryService;
 use Carbon\CarbonImmutable;
@@ -12,6 +13,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Admin
+ */
 class LocationLogController extends ApiController
 {
     public function __construct(private LocationHistoryService $history) {}
@@ -30,6 +34,9 @@ class LocationLogController extends ApiController
             ...$this->history->route($driver->id, $from, $to, $filters),
             'range' => ['from' => $from->toIso8601String(), 'to' => $to->toIso8601String()],
             'driver' => ['id' => $driver->id, 'name' => $driver->name],
+            'report' => isset($filters['report_id'])
+                ? Report::query()->whereKey($filters['report_id'])->first(['id', 'code'])?->only(['id', 'code'])
+                : null,
             'is_live' => $driver->openShift !== null && $to->greaterThanOrEqualTo(now()->subMinutes(5)),
         ]);
     }

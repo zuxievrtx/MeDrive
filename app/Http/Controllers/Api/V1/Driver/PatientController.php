@@ -10,6 +10,9 @@ use App\Models\ReportPatient;
 use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @group Driver
+ */
 class PatientController extends ApiController
 {
     public function __construct(private ReportService $reports) {}

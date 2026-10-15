@@ -13,6 +13,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Admin
+ */
 class DashboardController extends ApiController
 {
     public function __invoke(Request $request, DashboardMetrics $metrics, TrackingService $tracking, EscalationService $escalation): JsonResponse

@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 /**
  * Data awal panel eskalasi dispatch: laporan menunggu yang sudah melewati ronde pertama atau dialarmkan.
+ *
+ * @group Admin
  */
 class EscalationController extends ApiController
 {

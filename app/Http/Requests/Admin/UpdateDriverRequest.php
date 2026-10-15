@@ -27,12 +27,12 @@ class UpdateDriverRequest extends FormRequest
      */
     public function rules(): array
     {
-        $driver = $this->route('driver');
+        $driverId = $this->route('driver')?->id;
 
         return [
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]{8,20}$/'],
-            'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($driver->id)],
+            'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($driverId)],
             'new_password' => ['nullable', 'string', Password::min(8)],
             'clinic_id' => ['required', 'integer', Rule::exists('clinics', 'id')],
             'employee_number' => [
@@ -41,7 +41,7 @@ class UpdateDriverRequest extends FormRequest
                 'max:30',
                 Rule::unique('driver_profiles', 'employee_number')
                     ->where('clinic_id', $this->integer('clinic_id'))
-                    ->ignore($driver->id, 'user_id'),
+                    ->ignore($driverId, 'user_id'),
             ],
             'license_number' => ['required', 'string', 'max:30'],
             'license_class' => ['required', Rule::enum(LicenseClass::class)],

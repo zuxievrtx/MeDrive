@@ -82,6 +82,24 @@ it('shows demo data correctly on the dashboard summary', function () {
         ->assertJsonPath('data.latest_pending.0.code', 'MDR-261009-0002');
 });
 
+it('returns report type specific details for every demo report', function () {
+    $this->getJson('/api/v1/admin/reports/1')->assertJsonPath('data.details.kind', 'kecelakaan')->assertJsonPath('data.details.is_road_blocked', true);
+    $this->getJson('/api/v1/admin/reports/2')->assertJsonPath('data.details.kind', 'jenazah')->assertJsonPath('data.details.deceased_name', 'Alm. Bapak Sutrisno');
+    $this->getJson('/api/v1/admin/reports/3')->assertJsonPath('data.details.kind', 'medis')->assertJsonPath('data.dispatches.1.response.label', 'Kalah cepat');
+    $this->getJson('/api/v1/admin/reports/4')
+        ->assertJsonPath('data.details.kind', 'ibu_hamil')
+        ->assertJsonPath('data.details.gestational_age_weeks', 39)
+        ->assertJsonPath('data.is_cancellable', true);
+});
+
+it('serves the notification badge data', function () {
+    $this->getJson('/api/v1/admin/notifications?after_id=3')
+        ->assertOk()
+        ->assertJsonPath('data.pending_count', 1)
+        ->assertJsonPath('data.new_reports.0.code', 'MDR-261009-0002')
+        ->assertJsonPath('data.latest_pending.0.type.color', '#2F6F6A');
+});
+
 it('includes battery and mock flags from the snapshot in live tracking', function () {
     DriverLastLocation::query()->whereKey(4)->update(['battery_level' => 17, 'is_mock_location' => true]);
 

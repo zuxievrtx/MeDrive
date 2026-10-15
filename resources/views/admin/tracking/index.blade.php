@@ -1,5 +1,6 @@
 <x-admin.layout title="Peta Live" :breadcrumbs="['Laporan Darurat' => route('admin.reports.index')]">
-    <div x-data="trackingMap({ dataUrl: @js(route('admin.tracking.data')) })" @medrive:end-shift.window="openEndShift($event.detail)">
+    <div x-data="adminOptions('clinics,ambulance_types')">
+    <div x-data="trackingMap({ dataUrl: @js(route('api.v1.admin.tracking.live')) })" @medrive:end-shift.window="openEndShift($event.detail)">
         <x-admin.page-header title="Peta Live" description="Posisi driver dengan shift terbuka dari lokasi terakhir dan event realtime. Driver tanpa update lebih dari {{ config('medrive.signal_lost_seconds') }} detik ditandai sinyal hilang.">
             <x-slot:actions>
                 <span class="inline-flex items-center gap-2 text-sm text-stone-700" role="status">
@@ -15,14 +16,14 @@
                 <label for="filter-clinic" class="form-label">Klinik</label>
                 <select id="filter-clinic" x-model="filters.clinic" @change="redraw()" class="form-input">
                     <option value="">Semua klinik</option>
-                    @foreach ($clinics as $clinic)<option value="{{ $clinic->id }}">{{ $clinic->name }}</option>@endforeach
+                    <template x-for="item in options.clinics ?? []" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template>
                 </select>
             </div>
             <div>
                 <label for="filter-type" class="form-label">Jenis ambulans</label>
                 <select id="filter-type" x-model="filters.type" @change="redraw()" class="form-input">
                     <option value="">Semua jenis</option>
-                    @foreach ($ambulanceTypes as $type)<option value="{{ $type->id }}">{{ $type->name }}</option>@endforeach
+                    <template x-for="item in options.ambulance_types ?? []" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template>
                 </select>
             </div>
             <label class="inline-flex min-h-10 items-center gap-3 text-sm">
@@ -30,6 +31,8 @@
                 Hanya yang sedang bertugas
             </label>
         </div>
+
+        <x-admin.escalation-panel class="mb-4" />
 
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <section class="card relative h-[min(70vh,44rem)] min-h-96 overflow-hidden" aria-label="Peta posisi driver">
@@ -74,6 +77,7 @@
                                             <span x-text="driver.battery_level !== null ? `${driver.battery_level}%` : 'menunggu ping'"></span>
                                             <span x-show="driver.battery_level !== null && driver.battery_level < 20">rendah</span>
                                         </span>
+                                        <span x-show="driver.is_mock_location" class="font-semibold text-mr-700"><i class="fa-solid fa-location-crosshairs mr-1" aria-hidden="true"></i>lokasi palsu</span>
                                         <span :class="isStale(driver) ? 'font-semibold text-mr-700' : ''" x-text="isStale(driver) ? `sinyal hilang, ${agoLabel(driver.recorded_at)}` : `update ${agoLabel(driver.recorded_at)}`" :data-tick="tick"></span>
                                     </div>
                                 </button>
@@ -86,11 +90,11 @@
 
         <x-admin.modal show="endShift.open" title="Akhiri shift driver">
             <p class="text-sm text-stone-700">Shift <strong x-text="endShift.name"></strong> akan ditutup dengan alasan <strong>dihentikan admin</strong>. Laporan yang sedang ditangani tidak diubah.</p>
-            <form method="POST" :action="@js(route('admin.shifts.end', ['shift' => '__SHIFT__'])).replace('__SHIFT__', endShift.shiftId)" class="mt-6 flex justify-end gap-2">
-                @csrf
+            <div class="mt-6 flex justify-end gap-2">
                 <button type="button" class="btn-secondary" @click="endShift.open = false">Batal</button>
-                <button type="submit" class="btn-danger">Akhiri shift</button>
-            </form>
+                <button type="button" class="btn-danger" :disabled="endShift.submitting" @click="confirmEndShift()">Akhiri shift</button>
+            </div>
         </x-admin.modal>
+    </div>
     </div>
 </x-admin.layout>

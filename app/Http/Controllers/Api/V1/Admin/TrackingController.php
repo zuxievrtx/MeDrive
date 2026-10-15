@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Posisi awal Peta Live dan polling cadangan: driver_last_locations JOIN shift terbuka, ambulans, profil.
+ *
+ * @group Admin
  */
 class TrackingController extends ApiController
 {

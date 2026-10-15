@@ -13,6 +13,9 @@ use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Driver
+ */
 class ReportController extends ApiController
 {
     public function history(Request $request): JsonResponse

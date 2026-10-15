@@ -2,25 +2,22 @@
 
 namespace App\Providers;
 
-use App\Enums\ReportStatus;
+use App\Broadcasting\ResilientPusherBroadcaster;
 use App\Enums\UserRole;
 use App\Models\DriverCertification;
 use App\Models\DriverShift;
-use App\Models\Report;
 use App\Models\ReportDispatch;
 use App\Models\ReportPatient;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\View\View as ViewContract;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,7 +37,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('id');
         Model::preventLazyLoading(! $this->app->isProduction());
-        Paginator::defaultView('admin.partials.pagination');
 
         RateLimiter::for('admin-login', function (Request $request): Limit {
             return Limit::perMinute(5)->by(mb_strtolower((string) $request->input('email')).'|'.$request->ip());
@@ -58,12 +54,10 @@ class AppServiceProvider extends ServiceProvider
         // Otorisasi kanal privat Reverb untuk aplikasi mobile (token Bearer): /api/v1/broadcasting/auth.
         Broadcast::routes(['prefix' => 'api/v1', 'middleware' => ['auth:sanctum']]);
 
-        View::composer('admin.partials.topbar', function (ViewContract $view): void {
-            $view->with([
-                'pendingReportCount' => Report::query()->where('status', ReportStatus::Menunggu)->count(),
-                'lastReportId' => (int) Report::query()->max('id'),
-            ]);
-        });
+        // Reverb mati tidak boleh menggagalkan laporan darurat; lihat ResilientPusherBroadcaster.
+        Broadcast::extend('reverb', fn ($app, array $config): ResilientPusherBroadcaster => new ResilientPusherBroadcaster(
+            $app->make(BroadcastManager::class)->pusher($config),
+        ));
     }
 
     /**
