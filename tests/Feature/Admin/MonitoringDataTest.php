@@ -125,4 +125,4 @@ it('authorizes the private admin channels only for admins', function (string $ch
     expect($authorize($this->admin))->toBeTrue()
         ->and($authorize(User::query()->find(3)))->toBeFalse()
         ->and($authorize(User::factory()->admin()->inactive()->create()))->toBeFalse();
-})->with(['admin.reports', 'admin.tracking']);
+})->with(['admin', 'admin.tracking']);

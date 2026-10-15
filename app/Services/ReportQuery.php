@@ -23,6 +23,7 @@ class ReportQuery
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'driver_id' => ['nullable', 'integer'],
             'clinic_id' => ['nullable', 'integer'],
+            'reporter_id' => ['nullable', 'integer'],
         ];
     }
 
@@ -42,6 +43,7 @@ class ReportQuery
             ->when($filters['from'] ?? null, fn (Builder $query, string $from) => $query->where('created_at', '>=', now()->parse($from)->startOfDay()))
             ->when($filters['to'] ?? null, fn (Builder $query, string $to) => $query->where('created_at', '<=', now()->parse($to)->endOfDay()))
             ->when($filters['driver_id'] ?? null, fn (Builder $query, int $driverId) => $query->where('driver_id', $driverId))
+            ->when($filters['reporter_id'] ?? null, fn (Builder $query, int $reporterId) => $query->where('reporter_id', $reporterId))
             ->when($filters['clinic_id'] ?? null, fn (Builder $query, int $clinicId) => $query->whereHas('ambulance', fn (Builder $query) => $query->where('clinic_id', $clinicId)));
     }
 }

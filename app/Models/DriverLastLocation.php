@@ -13,7 +13,7 @@ class DriverLastLocation extends Model
 
     protected $primaryKey = 'driver_id';
 
-    protected $fillable = ['driver_id', 'shift_id', 'latitude', 'longitude', 'accuracy_m', 'speed_kmh', 'heading', 'recorded_at'];
+    protected $fillable = ['driver_id', 'shift_id', 'latitude', 'longitude', 'accuracy_m', 'speed_kmh', 'heading', 'battery_level', 'is_mock_location', 'recorded_at'];
 
     protected function casts(): array
     {
@@ -23,6 +23,8 @@ class DriverLastLocation extends Model
             'accuracy_m' => 'decimal:1',
             'speed_kmh' => 'decimal:1',
             'heading' => 'integer',
+            'battery_level' => 'integer',
+            'is_mock_location' => 'boolean',
             'recorded_at' => 'datetime',
         ];
     }

@@ -24,6 +24,27 @@ class ReportType extends Model
     }
 
     /**
+     * Tabel detail yang dipakai jenis ini (dipetakan dari kode jenis data v3).
+     */
+    public function detailKind(): ?string
+    {
+        return config('medrive.report_detail_tables.'.$this->code);
+    }
+
+    /**
+     * Jeda antar ronde broadcast (detik): jenis terjadwal lebih longgar, sisanya per prioritas.
+     */
+    public function roundIntervalSeconds(): int
+    {
+        if (! $this->is_emergency) {
+            return (int) config('medrive.dispatch.round_interval_seconds.scheduled');
+        }
+
+        return (int) (config('medrive.dispatch.round_interval_seconds.priority.'.$this->priority)
+            ?? config('medrive.dispatch.round_interval_seconds.default'));
+    }
+
+    /**
      * @return HasMany<Report, $this>
      */
     public function reports(): HasMany

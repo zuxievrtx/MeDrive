@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DriverLocationLog extends Model
 {
+    use MassPrunable;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -40,6 +44,16 @@ class DriverLocationLog extends Model
             'recorded_at' => 'datetime',
             'received_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Retensi log detail 14 hari (model:prune tiap malam). Memakai received_at karena kolom itu punya index sendiri (idx_dlog_received).
+     *
+     * @return Builder<DriverLocationLog>
+     */
+    public function prunable(): Builder
+    {
+        return static::query()->where('received_at', '<', now()->subDays((int) config('medrive.location_log_retention_days')));
     }
 
     /**

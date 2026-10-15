@@ -6,13 +6,15 @@ use App\Models\Report;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Laporan baru masuk dari aplikasi pelapor; ditampilkan sebagai toast + badge di dashboard admin.
+ * Dikirim setelah transaksi commit agar dashboard tidak menerima laporan yang batal tersimpan.
  */
-class ReportCreated implements ShouldBroadcastNow
+class ReportCreated implements ShouldBroadcastNow, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -23,7 +25,7 @@ class ReportCreated implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('admin.reports')];
+        return [new PrivateChannel('admin')];
     }
 
     public function broadcastAs(): string
@@ -44,6 +46,7 @@ class ReportCreated implements ShouldBroadcastNow
             'address' => $this->report->shortAddress(),
             'created_at' => $this->report->created_at?->toIso8601String(),
             'url' => route('admin.reports.show', $this->report),
+            'status' => $this->report->status?->value ?? 'menunggu',
             'type' => [
                 'name' => $this->report->reportType?->name,
                 'icon' => $this->report->reportType?->icon,
