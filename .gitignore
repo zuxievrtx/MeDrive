@@ -1,0 +1,6 @@
+# OS / editor cruft only.
+# Project-specific ignores live in backend/.gitignore and frontend/.gitignore
+# (leading-slash patterns there are anchored to their own directory).
+.DS_Store
+Thumbs.db
+*.log
