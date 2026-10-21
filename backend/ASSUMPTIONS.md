@@ -1,11 +1,11 @@
 # Asumsi dan Keputusan: Medrive (dashboard admin + API v1)
 
-Dokumen ini mencatat asumsi, keputusan teknis, dan **perbedaan antara prompt dengan kondisi repo**. Bagian A–D berasal dari pembuatan dashboard admin (fase 1) dan sudah diperbarui; bagian E–H berasal dari pembangunan backend API (fase 2).
+Dokumen ini mencatat asumsi, keputusan teknis, dan **perbedaan antara prompt dengan kondisi repo**. Bagian A–D berasal dari pembuatan dashboard admin (fase 1) dan sudah diperbarui; bagian E–H berasal dari pembangunan backend API (fase 2); bagian I berasal dari fase 3 (chat, terverifikasi, rute/ETA, geocoding).
 
 ## A. Perbedaan prompt vs repo (perlu diketahui)
 
 1. **File `medrive_db_v3.sql` dan `medrive_erd_v3.dbml` tidak ada di repo.** Acuan skema adalah 23 migration di `database/migrations/2026_10_12_0000xx_*` serta `MasterDataSeeder`/`DemoDataSeeder` yang menyatakan diri "dibuat otomatis dari medrive_db_v3.sql". Kecocokan "persis dengan medrive_db_v3.sql" tidak bisa diverifikasi langsung; yang dijaga adalah migration tersebut tidak diubah.
-2. **Tabel v3 tidak diubah.** Tambahan hanya whitelist prompt fase 2: `users.remember_token`, tabel `personal_access_tokens`, `jobs`, `failed_jobs`, `job_batches`, `cache`, `cache_locks`, serta `driver_last_locations.battery_level` (`TINYINT UNSIGNED NULL`) dan `driver_last_locations.is_mock_location` (`BOOLEAN NOT NULL DEFAULT FALSE`). Semuanya migration terpisah bertanggal `2026_10_15_*`.
+2. **Tabel v3 tidak diubah.** Tambahan hanya whitelist prompt fase 2: `users.remember_token`, tabel `personal_access_tokens`, `jobs`, `failed_jobs`, `job_batches`, `cache`, `cache_locks`, serta `driver_last_locations.battery_level` (`TINYINT UNSIGNED NULL`) dan `driver_last_locations.is_mock_location` (`BOOLEAN NOT NULL DEFAULT FALSE`). Semuanya migration terpisah bertanggal `2026_10_15_*`. Fase 3 menambah satu tabel whitelist: `chat_messages` (`2026_10_21_181605_create_chat_messages_table`), sesuai DDL prompt termasuk CHECK `chk_chat_type`.
 3. **Model lama `DriverProfile` dan `Report` mengikuti skema versi lama** (kolom `plate_number`, `is_active`, `last_lat`, dst.) dan ditulis ulang mengikuti v3 di fase 1.
 4. **`ambulance_types` tidak punya kolom ikon.** Ikon marker per jenis ambulans dipetakan dari kode jenis di `config/medrive.php` (`ambulance_type_icons`).
 5. **Migration `driver_shifts`**: ekspresi kolom generated `IF(...)` hanya ada di MySQL; ada cabang `CASE WHEN` setara untuk SQLite. Test suite kini berjalan di MySQL (`medrive_db_test`), jadi cabang SQLite hanya cadangan.
@@ -85,3 +85,41 @@ Arah desain dari prompt (palet merah, Inter, sidebar gelap, konten terang). Desi
 ## H. Hal yang sengaja tidak dibangun
 
 Sesuai Bagian 19 prompt: registrasi driver mandiri, laporan dibuat admin, penugasan manual oleh admin, lepas laporan saat ambulans rusak, pembatalan oleh pelapor, dan penutupan shift otomatis. Endpoint `POST /api/v1/auth/register` selalu membuat role `pelapor`.
+
+## I. Fase 3: chat, terverifikasi, rute/ETA, geocoding
+
+### Perbedaan prompt vs repo
+
+1. **Repo kini monorepo (`backend/` Laravel, `frontend/` Flutter).** Fase 1–2 dikerjakan saat repo masih berisi Laravel di root; isinya sudah dipindah ke `backend/` di `main`. Fase 3 dibangun di atas `main` itu dan hanya mengubah `backend/`; `frontend/` tidak disentuh.
+2. **Path endpoint mengikuti prefix grup fase 2** (A.6): `GET /reports/{id}/chat` menjadi `/api/v1/reporter/reports/{id}/chat` dan `/api/v1/driver/reports/{id}/chat`; `/chat/unread-count` ada di kedua prefix; `PUT /profile` menjadi `PUT /api/v1/reporter/profile`; `GET /reports/{id}/route` menjadi `/api/v1/reporter/reports/{id}/route`; `GET /reports/{id}` (kartu driver) adalah `/api/v1/reporter/reports/{id}`. Geocoding dan media tetap di `/api/v1/geocode/*` dan `/api/v1/media/chat/{id}`.
+3. **Push status ke pelapor sudah ada sejak fase 2** (ambil laporan, setiap transisi driver, pembatalan admin). Fase 3 hanya menambah test yang membuktikannya; payload memuat `report_id` dan `status` (ditambah `type` dan `report_code`).
+4. **`/api/v1/broadcasting/auth` dengan Bearer token** sudah ada sejak fase 2; kanal `chat.{report}` ditambahkan di `routes/channels.php`.
+
+### Chat
+
+- Peserta = pelapor pemilik laporan dan driver di `reports.driver_id`, dengan akun aktif. Semua pihak lain mendapat `403 chat_forbidden`. Admin tidak punya rute chat (grup reporter/driver menolak role admin), kanal `chat.{report}` menolak admin, dan media chat menolak admin walaupun media lain boleh dibuka admin.
+- Isi chat tidak masuk log: mode log-only FCM menyamarkan judul dan isi notifikasi chat, dan job `SendFcmNotification` memakai `ShouldBeEncrypted` sehingga cuplikan pesan terenkripsi di tabel `jobs`/`failed_jobs`. Admin activity log tidak mencatat apa pun dari chat (chat bukan aksi admin).
+- Chat hanya bisa dikirim saat status `diambil`…`mengantar_pasien`. Pesan 409 `chat_closed` disesuaikan status: "Chat ditutup karena laporan sudah selesai." (selesai), "...sudah dibatalkan." (dibatalkan), "Chat dibuka setelah driver mengambil laporan." (menunggu). Riwayat dan tandai-baca tetap boleh setelah laporan ditutup.
+- Riwayat memakai kursor `before_id` (bukan nomor halaman), sehingga pesan baru yang masuk saat menggulir tidak menggeser halaman. Metadata ada di `meta.cursor`, bukan `meta.pagination`.
+- `ChatMessageRead` membawa `last_read_id` agar aplikasi pengirim bisa menandai semua pesannya sampai id itu tanpa daftar id.
+- Foto chat disimpan di disk privat `local` (`storage/app/private/chat/{report_id}/`), maksimal 1 MB, jpg/png.
+
+### Badge terverifikasi
+
+- Sertifikat dihitung berlaku bila `expires_at` kosong atau `expires_at >= hari ini`. Prompt menulis `expires_at > NOW()`; karena kolomnya `DATE`, perbandingan dengan waktu sekarang akan menganggap sertifikat kedaluwarsa sejak pukul 00.01 di hari terakhirnya, sementara dashboard admin menyebut sertifikat kedaluwarsa hanya bila `expires_at < hari ini`. Aturan dashboard yang dipakai agar badge dan dashboard tidak bertentangan.
+
+### Rute & ETA
+
+- Kontrak `RouteProvider` + `OsrmProvider` (binding di `AppServiceProvider`). Posisi awal dari cache posisi terbaru / `driver_last_locations` (tidak pernah dari `driver_location_logs`).
+- Cache per koordinat (4 desimal + arah) 60 detik; per laporan maksimal satu panggilan OSRM per 30 detik. Bila jendela 30 detik belum lewat dan koordinat berubah, rute terakhir laporan itu yang dikirim. Bila OSRM gagal: rute terakhir dengan `stale: true`, atau `502 route_unavailable` bila belum ada.
+- Saat status `mengantar_pasien` dan laporan punya koordinat tujuan, rute mengarah ke tujuan antar (`target: destination`), karena titik jemput sudah dilewati. Di status lain rute ke titik jemput sesuai prompt.
+
+### Geocoding
+
+- Proxy Nominatim dengan header `User-Agent` dari `NOMINATIM_USER_AGENT`, `accept-language=id`, pencarian dibatasi `countrycodes=id`.
+- Selain rate limit 30/menit per token, ada batas global 1 panggilan upstream per detik (kebijakan server publik Nominatim) yang membalas `429 geocode_busy`. Bisa dinaikkan lewat `NOMINATIM_UPSTREAM_PER_SECOND` bila memakai Nominatim sendiri. Respons gagal tidak di-cache.
+- **CORS dipersempit**: sebelumnya bawaan Laravel mengizinkan semua origin (`*`). Kini hanya origin di `CORS_ALLOWED_ORIGINS` (default `APP_URL`), sehingga proxy rute/geocode tidak bisa dipakai situs lain lewat browser. Aplikasi Android/iOS tidak terpengaruh CORS; bila nanti ada Flutter Web, tambahkan origin-nya.
+
+### Tidak dibangun
+
+Fitur rating dalam bentuk apa pun (tabel, endpoint, maupun UI). UI admin tidak diubah; `is_verified` hanya ditambahkan di JSON `GET /api/v1/admin/drivers/{id}`.

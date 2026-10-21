@@ -25,6 +25,7 @@ class ProfileController extends ApiController
 
         return $this->ok([
             ...UserResource::make($driver)->resolve($request),
+            'is_verified' => $driver->is_verified_driver,
             'certifications' => DriverCertificationResource::collection($driver->certifications)->resolve($request),
         ]);
     }

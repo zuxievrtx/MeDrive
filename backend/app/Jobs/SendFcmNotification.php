@@ -4,10 +4,14 @@ namespace App\Jobs;
 
 use App\Models\UserDevice;
 use App\Services\FcmService;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class SendFcmNotification implements ShouldQueue
+/**
+ * Payload dienkripsi di tabel jobs/failed_jobs karena cuplikan chat ikut di isi notifikasi.
+ */
+class SendFcmNotification implements ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 

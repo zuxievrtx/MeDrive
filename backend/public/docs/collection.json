@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Medrive API v1",
-        "_postman_id": "f5649c86-944a-4106-ab80-8a41841a44d7",
+        "_postman_id": "f177bdc5-7fee-4d47-bc9b-a7678b45a805",
         "description": "API untuk aplikasi Pelapor, aplikasi Driver, dan dashboard Admin Medrive.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -410,6 +410,67 @@
                         "description": ""
                     },
                     "response": []
+                },
+                {
+                    "name": "Rute & ETA ambulans",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/reports\/:report_id\/route",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/reports\/:report_id\/route",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Dari posisi terakhir ambulans ke titik jemput (ke tujuan antar saat status mengantar pasien).\nBila OSRM gagal dan ada rute lama, respons berisi rute itu dengan stale = true."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Ubah profil pelapor",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/profile",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/profile"
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"phone\":\"ngzmiyvdljnikhwa\"}"
+                        },
+                        "description": "Hanya nama dan telepon. Email dan role tidak bisa diubah lewat endpoint ini."
+                    },
+                    "response": []
                 }
             ]
         },
@@ -730,7 +791,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"dalam_perjalanan\",\"latitude\":-89,\"longitude\":-179,\"note\":\"g\"}"
+                            "raw": "{\"status\":\"selesai\",\"latitude\":-89,\"longitude\":-179,\"note\":\"g\"}"
                         },
                         "description": ""
                     },
@@ -766,7 +827,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"b\",\"gender\":\"P\",\"age_estimate\":1,\"consciousness\":\"sadar\",\"is_breathing\":false,\"condition_note\":\"g\",\"handed_over_to\":\"z\",\"handed_over_at\":\"2022-11-09\"}"
+                            "raw": "{\"name\":\"b\",\"gender\":\"P\",\"age_estimate\":1,\"consciousness\":\"sadar\",\"is_breathing\":false,\"condition_note\":\"g\",\"handed_over_to\":\"z\",\"handed_over_at\":\"2022-11-15\"}"
                         },
                         "description": ""
                     },
@@ -802,7 +863,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"b\",\"gender\":\"P\",\"age_estimate\":1,\"consciousness\":\"tidak_diketahui\",\"is_breathing\":false,\"condition_note\":\"g\",\"handed_over_to\":\"z\",\"handed_over_at\":\"2022-11-09\"}"
+                            "raw": "{\"name\":\"b\",\"gender\":\"P\",\"age_estimate\":1,\"consciousness\":\"tidak_diketahui\",\"is_breathing\":true,\"condition_note\":\"g\",\"handed_over_to\":\"z\",\"handed_over_at\":\"2022-11-15\"}"
                         },
                         "description": ""
                     },
@@ -847,6 +908,403 @@
                             ]
                         },
                         "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Rute ke TKP",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/driver\/route",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/driver\/route"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Dari posisi terakhir driver ke titik jemput laporan aktif (ke tujuan antar saat status mengantar pasien).\nDi-cache 60 detik; OSRM dipanggil paling sering sekali per 30 detik per laporan."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Chat",
+            "description": "",
+            "item": [
+                {
+                    "name": "Riwayat chat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/reports\/:report_id\/chat",
+                            "query": [
+                                {
+                                    "key": "before_id",
+                                    "value": "120",
+                                    "description": "ID pesan tertua yang sudah dimuat.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/reports\/:report_id\/chat?before_id=120",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Urut lama \u2192 baru, 30 pesan per halaman. Kirim before_id = meta.cursor.next_before_id untuk memuat pesan yang lebih lama."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Tandai pesan lawan bicara sudah dibaca",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/reports\/:report_id\/chat\/read",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/reports\/:report_id\/chat\/read",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Jumlah pesan belum dibaca",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/chat\/unread-count",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/chat\/unread-count"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Kirim pesan",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reporter\/reports\/:report_id\/chat",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/reporter\/reports\/:report_id\/chat",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "type",
+                                    "value": "text",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "body",
+                                    "value": "b",
+                                    "type": "text",
+                                    "description": "This field is required when <code>type<\/code> is <code>text<\/code>. Must not be greater than 1000 characters."
+                                },
+                                {
+                                    "key": "image",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Hanya selama laporan aktif (diambil sampai mengantar pasien); selain itu 409 chat_closed. Maksimal 30 pesan\/menit."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Riwayat chat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/driver\/reports\/:report_id\/chat",
+                            "query": [
+                                {
+                                    "key": "before_id",
+                                    "value": "120",
+                                    "description": "ID pesan tertua yang sudah dimuat.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/driver\/reports\/:report_id\/chat?before_id=120",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Urut lama \u2192 baru, 30 pesan per halaman. Kirim before_id = meta.cursor.next_before_id untuk memuat pesan yang lebih lama."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Tandai pesan lawan bicara sudah dibaca",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/driver\/reports\/:report_id\/chat\/read",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/driver\/reports\/:report_id\/chat\/read",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Jumlah pesan belum dibaca",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/driver\/chat\/unread-count",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/driver\/chat\/unread-count"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Kirim pesan",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/driver\/reports\/:report_id\/chat",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/driver\/reports\/:report_id\/chat",
+                            "variable": [
+                                {
+                                    "id": "report_id",
+                                    "key": "report_id",
+                                    "value": 1,
+                                    "description": "The ID of the report."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "type",
+                                    "value": "image",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "body",
+                                    "value": "b",
+                                    "type": "text",
+                                    "description": "This field is required when <code>type<\/code> is <code>text<\/code>. Must not be greater than 1000 characters."
+                                },
+                                {
+                                    "key": "image",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Hanya selama laporan aktif (diambil sampai mengantar pasien); selain itu 409 chat_closed. Maksimal 30 pesan\/menit."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Geocoding",
+            "description": "",
+            "item": [
+                {
+                    "name": "Alamat dari koordinat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/geocode\/reverse",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/geocode\/reverse"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"lat\":-89,\"lng\":-179}"
+                        },
+                        "description": "Hasil di-cache 24 jam per titik (5 desimal). address bernilai null bila Nominatim tidak menemukan alamat."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cari tempat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/geocode\/search",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/geocode\/search"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"q\":\"b\",\"limit\":2}"
+                        },
+                        "description": "Dibatasi wilayah Indonesia, di-cache 10 menit per kata kunci."
                     },
                     "response": []
                 }
@@ -1264,13 +1722,13 @@
                                 },
                                 {
                                     "key": "issued_at",
-                                    "value": "2022-11-09",
+                                    "value": "2022-11-15",
                                     "type": "text",
                                     "description": "Must be a valid date. Must be a date before or equal to <code>today<\/code>."
                                 },
                                 {
                                     "key": "expires_at",
-                                    "value": "2052-11-08",
+                                    "value": "2052-11-13",
                                     "type": "text",
                                     "description": "Must be a valid date. Must be a date after <code>issued_at<\/code>."
                                 },
@@ -1307,7 +1765,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"q\":\"b\",\"clinic_id\":16,\"institution_id\":16,\"shift\":\"tidak\",\"status\":\"aktif\",\"direction\":\"asc\"}"
+                            "raw": "{\"q\":\"b\",\"clinic_id\":16,\"institution_id\":16,\"shift\":\"aktif\",\"status\":\"aktif\",\"direction\":\"asc\"}"
                         },
                         "description": ""
                     },
@@ -1386,13 +1844,13 @@
                                 },
                                 {
                                     "key": "license_class",
-                                    "value": "B1_umum",
+                                    "value": "B2",
                                     "type": "text",
                                     "description": ""
                                 },
                                 {
                                     "key": "license_expires_at",
-                                    "value": "2052-11-09",
+                                    "value": "2052-11-14",
                                     "type": "text",
                                     "description": "Must be a valid date. Must be a date after or equal to <code>tomorrow<\/code>."
                                 },
@@ -1416,13 +1874,13 @@
                                 },
                                 {
                                     "key": "certifications[0][issued_at]",
-                                    "value": "2022-11-09",
+                                    "value": "2022-11-15",
                                     "type": "text",
                                     "description": ""
                                 },
                                 {
                                     "key": "certifications[0][expires_at]",
-                                    "value": "2052-11-08",
+                                    "value": "2052-11-13",
                                     "type": "text",
                                     "description": ""
                                 },
@@ -1550,13 +2008,13 @@
                                 },
                                 {
                                     "key": "license_class",
-                                    "value": "B1_umum",
+                                    "value": "B1",
                                     "type": "text",
                                     "description": ""
                                 },
                                 {
                                     "key": "license_expires_at",
-                                    "value": "2026-10-16T00:27:48",
+                                    "value": "2026-10-21T18:25:09",
                                     "type": "text",
                                     "description": "Must be a valid date."
                                 },
@@ -1627,13 +2085,13 @@
                                 },
                                 {
                                     "key": "issued_at",
-                                    "value": "2022-11-09",
+                                    "value": "2022-11-15",
                                     "type": "text",
                                     "description": "Must be a valid date. Must be a date before or equal to <code>today<\/code>."
                                 },
                                 {
                                     "key": "expires_at",
-                                    "value": "2052-11-08",
+                                    "value": "2052-11-13",
                                     "type": "text",
                                     "description": "Must be a valid date. Must be a date after <code>issued_at<\/code>."
                                 },
@@ -1736,7 +2194,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"code\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"type\":\"pemerintah\",\"phone\":\"ykcmyuwpwlvqwrsi\",\"email\":\"pfritsch@example.com\",\"address\":\"c\",\"is_active\":false}"
+                            "raw": "{\"code\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"type\":\"swasta\",\"phone\":\"ykcmyuwpwlvqwrsi\",\"email\":\"pfritsch@example.com\",\"address\":\"c\",\"is_active\":false}"
                         },
                         "description": ""
                     },
@@ -1805,7 +2263,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"code\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"type\":\"pemerintah\",\"phone\":\"ykcmyuwpwlvqwrsi\",\"email\":\"pfritsch@example.com\",\"address\":\"c\",\"is_active\":true}"
+                            "raw": "{\"code\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"type\":\"pemerintah\",\"phone\":\"ykcmyuwpwlvqwrsi\",\"email\":\"pfritsch@example.com\",\"address\":\"c\",\"is_active\":false}"
                         },
                         "description": ""
                     },
@@ -1866,7 +2324,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"q\":\"b\",\"institution_id\":16,\"type\":\"puskesmas\",\"active\":0}"
+                            "raw": "{\"q\":\"b\",\"institution_id\":16,\"type\":\"rumah_sakit\",\"active\":1}"
                         },
                         "description": ""
                     },
@@ -1894,7 +2352,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"institution_id\":16,\"code\":\"ngzmiyvdljnikhwa\",\"name\":\"y\",\"type\":\"pos_ambulans\",\"phone\":\"kcmyuwpwlvqwrsit\",\"address\":\"c\",\"latitude\":-89,\"longitude\":-180,\"is_active\":false}"
+                            "raw": "{\"institution_id\":16,\"code\":\"ngzmiyvdljnikhwa\",\"name\":\"y\",\"type\":\"puskesmas\",\"phone\":\"kcmyuwpwlvqwrsit\",\"address\":\"c\",\"latitude\":-89,\"longitude\":-180,\"is_active\":false}"
                         },
                         "description": ""
                     },
@@ -2179,7 +2637,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"clinic_id\":16,\"ambulance_type_id\":16,\"plate_number\":\"n\",\"vehicle_name\":\"g\",\"year\":\"z\",\"status\":\"nonaktif\",\"notes\":\"m\"}"
+                            "raw": "{\"clinic_id\":16,\"ambulance_type_id\":16,\"plate_number\":\"n\",\"vehicle_name\":\"g\",\"year\":\"z\",\"status\":\"perawatan\",\"notes\":\"m\"}"
                         },
                         "description": ""
                     },
@@ -2248,7 +2706,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"clinic_id\":16,\"ambulance_type_id\":16,\"plate_number\":\"n\",\"vehicle_name\":\"g\",\"year\":\"z\",\"status\":\"nonaktif\",\"notes\":\"m\"}"
+                            "raw": "{\"clinic_id\":16,\"ambulance_type_id\":16,\"plate_number\":\"n\",\"vehicle_name\":\"g\",\"year\":\"z\",\"status\":\"tersedia\",\"notes\":\"m\"}"
                         },
                         "description": ""
                     },
@@ -2597,7 +3055,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"admin_id\":16,\"module\":\"n\",\"from\":\"2026-10-16T00:27:48\",\"to\":\"2052-11-08\"}"
+                            "raw": "{\"admin_id\":16,\"module\":\"n\",\"from\":\"2026-10-21T18:25:10\",\"to\":\"2052-11-13\"}"
                         },
                         "description": ""
                     },
@@ -2625,7 +3083,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"q\":\"b\",\"status\":\"nonaktif\"}"
+                            "raw": "{\"q\":\"b\",\"status\":\"aktif\"}"
                         },
                         "description": ""
                     },
@@ -2715,7 +3173,7 @@
                                 {
                                     "id": "type",
                                     "key": "type",
-                                    "value": "driver-photo|certification|attachment",
+                                    "value": "driver-photo|certification|attachment|chat",
                                     "description": ""
                                 },
                                 {

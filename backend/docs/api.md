@@ -60,7 +60,8 @@ Isi `data` notifikasi:
 | `type` | Penerima | Field | Aksi aplikasi |
 |---|---|---|---|
 | `dispatch` | Driver | `dispatch_id`, `report_id`, `report_code`, `report_type`, `distance_km`, `priority` | Buka layar tawaran, panggil `GET /driver/dispatches/{dispatch_id}` (menandai tawaran dibuka) |
-| `report_status` | Pelapor | `report_id`, `report_code`, `status` | Muat ulang detail laporan |
+| `report_status` | Pelapor | `report_id`, `report_code`, `status` | Muat ulang detail laporan. Dikirim untuk setiap perubahan status: `diambil`, `dalam_perjalanan`, `tiba_di_lokasi`, `mengantar_pasien`, `selesai`, `dibatalkan` |
+| `chat` | Pelapor atau driver (lawan bicara) | `report_id`, `report_code`, `message_id` | Buka layar chat laporan `report_id`. Judul = nama pengirim, isi = cuplikan teks atau "Mengirim foto" |
 
 Notifikasi bisa terlambat atau hilang. Aplikasi driver tetap memanggil `GET /driver/dispatches/active` saat dibuka dan saat kembali ke foreground.
 
@@ -156,7 +157,7 @@ Buat satu key per aksi pengguna dan pakai key yang sama untuk setiap retry aksi 
 
 ## 8. Berkas privat
 
-Foto driver, sertifikat, lampiran laporan, dan surat kematian tidak punya URL publik. Field `url`/`photo_url` di respons menunjuk ke `GET /api/v1/media/{type}/{id}` yang memeriksa hak akses. Muat gambar dengan header `Authorization` (mis. `Image.network(url, headers: {...})`). Tambahkan `?download=1` untuk mengunduh.
+Foto driver, sertifikat, lampiran laporan, surat kematian, dan foto chat tidak punya URL publik. Field `url`/`photo_url` di respons menunjuk ke `GET /api/v1/media/{type}/{id}` yang memeriksa hak akses. Muat gambar dengan header `Authorization` (mis. `Image.network(url, headers: {...})`). Tambahkan `?download=1` untuk mengunduh.
 
 ## 9. Rate limit
 
@@ -165,11 +166,135 @@ Foto driver, sertifikat, lampiran laporan, dan surat kematian tidak punya URL pu
 | `POST /auth/login`, `POST /auth/register` | 5 / menit per email + IP |
 | `POST /driver/location` | 60 / menit per token |
 | `POST /reporter/reports` | 10 / menit per token |
+| `POST .../reports/{id}/chat` | 30 pesan / menit per token |
+| `GET /geocode/*` | 30 / menit per token, ditambah batas server 1 permintaan/detik ke Nominatim (`429 geocode_busy`) |
 | Endpoint lain | 60 / menit per token |
 
 Saat 429, tunggu sesuai header `Retry-After` sebelum mencoba lagi.
 
-## 10. Membuat ulang dokumentasi Scribe
+## 10. Chat pelapor ↔ driver
+
+Room chat adalah laporan itu sendiri. Pesertanya hanya pelapor pemilik laporan dan driver yang mengambilnya; akun lain, termasuk admin, selalu mendapat `403 chat_forbidden`. Admin dashboard tidak punya endpoint, kanal, maupun tampilan chat.
+
+Endpoint identik di kedua aplikasi (`{app}` = `reporter` atau `driver`):
+
+| Endpoint | Fungsi |
+|---|---|
+| `GET /{app}/reports/{id}/chat?before_id=` | Riwayat, urut lama → baru, 30 pesan per halaman |
+| `POST /{app}/reports/{id}/chat` | Kirim pesan teks (JSON) atau foto (multipart) |
+| `POST /{app}/reports/{id}/chat/read` | Tandai semua pesan lawan bicara sudah dibaca |
+| `GET /{app}/chat/unread-count` | Jumlah belum dibaca untuk badge |
+| `GET /media/chat/{messageId}` | Foto chat (hanya dua peserta) |
+
+Kirim teks:
+
+```json
+POST /api/v1/reporter/reports/3/chat
+{ "type": "text", "body": "Pasien di lantai 2, pintu samping." }
+```
+
+Kirim foto (multipart): `type=image`, `image=<file jpg/png>`. Server menolak di atas 1 MB; kompres di aplikasi ke sekitar 300 KB (mis. `flutter_image_compress`, sisi terpanjang 1280 px, kualitas 70).
+
+Pesan (respons `POST`, isi `data` pada riwayat, dan payload event):
+
+```json
+{
+  "id": 41,
+  "report_id": 3,
+  "sender_id": 1,
+  "sender_name": "Budi Santoso",
+  "type": "image",
+  "body": null,
+  "image_url": "https://<domain>/api/v1/media/chat/41",
+  "mime_type": "image/jpeg",
+  "size_kb": 286,
+  "read_at": null,
+  "created_at": "2026-10-21T10:15:03+07:00",
+  "is_mine": true
+}
+```
+
+`is_mine` hanya ada di respons API, tidak di event.
+
+**Riwayat bertahap**: respons `GET` membawa `meta.cursor = { per_page, has_more, next_before_id }` dan `meta.is_open`. Untuk memuat pesan lebih lama saat pengguna menggulir ke atas, panggil lagi dengan `?before_id=<next_before_id>` sampai `has_more = false`.
+
+**Chat tertutup**: kirim hanya bisa selama status laporan `diambil`, `dalam_perjalanan`, `tiba_di_lokasi`, atau `mengantar_pasien`. Di luar itu server membalas `409 chat_closed` ("Chat ditutup karena laporan sudah selesai.", atau pesan sesuai status). Riwayat tetap bisa dibaca setelah laporan selesai. Pesan tidak bisa diedit atau dihapus.
+
+**Realtime**: subscribe kanal privat `private-chat.{reportId}` (otorisasi Bearer seperti bagian 6). Nama event persis seperti di tabel (tanpa awalan titik, karena server memakai `broadcastAs`):
+
+| Event | Payload | Aksi |
+|---|---|---|
+| `ChatMessageSent` | objek pesan di atas tanpa `is_mine` | Tambahkan ke daftar; abaikan bila `sender_id` = user sendiri (sudah ada dari respons POST) |
+| `ChatMessageRead` | `report_id`, `reader_id`, `last_read_id`, `read_at` | Tandai pesan sendiri dengan `id <= last_read_id` sebagai dibaca |
+
+Contoh dengan `pusher_client`:
+
+```dart
+final pusher = PusherClient(
+  reverbAppKey,
+  PusherOptions(
+    host: reverbHost,          // REVERB_HOST
+    wsPort: reverbPort,        // REVERB_PORT
+    encrypted: reverbScheme == 'https',
+    cluster: 'mt1',            // diabaikan Reverb, wajib diisi paket
+    auth: PusherAuth(
+      '$apiBase/api/v1/broadcasting/auth',
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    ),
+  ),
+  autoConnect: false,
+);
+await pusher.connect();
+final channel = pusher.subscribe('private-chat.$reportId');
+channel.bind('ChatMessageSent', (event) => onMessage(jsonDecode(event!.data!)));
+channel.bind('ChatMessageRead', (event) => onRead(jsonDecode(event!.data!)));
+```
+
+Saat layar chat dibuka atau kembali ke foreground, muat ulang riwayat terbaru lalu panggil `.../chat/read`. Bila WebSocket putus, polling `GET .../chat` tiap 10 detik.
+
+## 11. Rute & ETA
+
+| Endpoint | Untuk |
+|---|---|
+| `GET /reporter/reports/{id}/route` | Pelapor pemilik laporan: rute ambulans → titik jemput |
+| `GET /driver/route` | Driver: posisinya → titik jemput laporan aktif |
+
+Saat status `mengantar_pasien` dan laporan punya koordinat tujuan, rute mengarah ke tujuan antar (`target: "destination"`).
+
+```json
+{
+  "report_id": 3,
+  "distance_km": 3.46,
+  "duration_min": 7.2,
+  "geometry": [[-6.9932, 110.4203], [-6.995, 110.422]],
+  "target": "pickup",
+  "from": { "latitude": -6.9932, "longitude": 110.4203, "updated_at": "2026-10-21T10:15:00+07:00" },
+  "to": { "latitude": -6.9981, "longitude": 110.4251 },
+  "stale": false,
+  "computed_at": "2026-10-21T10:15:02+07:00"
+}
+```
+
+`geometry` sudah dalam urutan `[lat, lng]` dan disederhanakan; gambar langsung sebagai polyline. Server memanggil OSRM paling sering sekali per 30 detik per laporan dan menyimpan hasil 60 detik, jadi polling lebih cepat dari 30 detik tidak memberi rute baru. Gerakan ambulans di antara dua rute tetap dari event `DriverLocationUpdated`.
+
+Bila OSRM gagal tetapi ada rute sebelumnya, respons memakai rute itu dengan `stale: true` (tampilkan ETA sebagai perkiraan). Tanpa rute sebelumnya: `502 route_unavailable`. Error lain: `409 route_unavailable_status` (laporan belum diambil / sudah selesai), `409 driver_location_unavailable`, `409 no_active_report` (driver).
+
+## 12. Geocoding
+
+Aplikasi **wajib** memakai endpoint ini; jangan memanggil Nominatim atau OSRM langsung dari aplikasi (kebijakan penggunaan server publik, kuota, dan cache bersama ada di backend).
+
+- `GET /geocode/reverse?lat=-6.9932&lng=110.4203` → `{ "address": "Jl. Pahlawan, ...", "latitude": ..., "longitude": ... }`. `address` bisa `null` bila tidak ditemukan. Cache 24 jam.
+- `GET /geocode/search?q=simpang lima&limit=5` → `[{ "label": "...", "latitude": -6.99, "longitude": 110.42 }]`. Minimal 3 huruf, wilayah Indonesia, cache 10 menit.
+
+Panggil pencarian setelah pengguna berhenti mengetik ±600 ms (debounce). Error: `502 geocode_unavailable`, `429 geocode_busy` (coba lagi 1–2 detik kemudian).
+
+## 13. Profil pelapor dan badge terverifikasi
+
+`PUT /reporter/profile` dengan `{ "name", "phone" }`. Email dan role tidak bisa diubah lewat endpoint ini (field lain diabaikan).
+
+Field `is_verified` (boolean) menandai driver yang punya minimal satu sertifikat masih berlaku hari ini. Tersedia di `GET /driver/profile`, di kartu `driver` pada `GET /reporter/reports/{id}`, dan di `GET /admin/drivers/{id}`. Tampilkan badge "Terverifikasi" bila `true`.
+
+## 14. Membuat ulang dokumentasi Scribe
 
 ```bash
 APP_LOCALE=en php artisan scribe:generate

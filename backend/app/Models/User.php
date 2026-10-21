@@ -6,6 +6,7 @@ use App\Enums\AccountStatus;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -104,6 +105,21 @@ class User extends Authenticatable
     public function certifications(): HasMany
     {
         return $this->hasMany(DriverCertification::class, 'driver_id');
+    }
+
+    /**
+     * Badge "Terverifikasi": driver punya minimal satu sertifikat yang masih berlaku hari ini
+     * (tanpa masa berlaku, atau expires_at >= hari ini, sama dengan aturan "kedaluwarsa" di dashboard).
+     * Dihitung saat dibaca, tanpa kolom baru. Tidak memeriksa role karena kartu driver sering dimuat
+     * dengan kolom terbatas (id, name, phone); hanya driver yang punya sertifikat.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function isVerifiedDriver(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->certifications()
+            ->where(fn (Builder $query) => $query->whereNull('expires_at')->orWhereDate('expires_at', '>=', today()))
+            ->exists())->shouldCache();
     }
 
     /**

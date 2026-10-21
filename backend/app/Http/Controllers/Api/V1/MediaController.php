@@ -4,18 +4,20 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Api\ApiController;
+use App\Models\ChatMessage;
 use App\Models\DriverCertification;
 use App\Models\DriverProfile;
 use App\Models\Report;
 use App\Models\ReportAttachment;
 use App\Models\ReportDispatch;
 use App\Models\User;
+use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Streaming berkas privat (foto driver, sertifikat, lampiran laporan) dengan otorisasi per jenis berkas.
+ * Streaming berkas privat (foto driver, sertifikat, lampiran laporan, foto chat) dengan otorisasi per jenis berkas.
  * Berkas tidak pernah punya URL publik.
  *
  * @group Berkas privat
@@ -30,6 +32,7 @@ class MediaController extends ApiController
             'driver-photo' => $this->driverPhoto($user, $id),
             'certification' => $this->certification($user, $id),
             'attachment' => $this->attachment($user, $id),
+            'chat' => $this->chatImage($user, $id),
         };
 
         if (! $path || ! Storage::disk('local')->exists($path)) {
@@ -89,6 +92,22 @@ class MediaController extends ApiController
         $this->authorizeOrFail($allowed);
 
         return [$attachment->file_path, $report->code.'-'.$attachment->type.'.'.pathinfo($attachment->file_path, PATHINFO_EXTENSION), $attachment->mime_type];
+    }
+
+    /**
+     * Foto chat: hanya dua peserta room (pelapor pemilik dan driver yang ditugaskan). Admin pun ditolak.
+     *
+     * @return array{0: ?string, 1: string, 2: ?string}
+     */
+    private function chatImage(User $user, int $id): array
+    {
+        $message = ChatMessage::query()->with('report:id,code,reporter_id,driver_id')->findOrFail($id);
+
+        if (! app(ChatService::class)->isParticipant($user, $message->report)) {
+            throw ApiException::forbidden('chat_forbidden', 'Anda bukan peserta chat laporan ini.');
+        }
+
+        return [$message->file_path, $message->report->code.'-chat-'.$message->id.'.'.pathinfo((string) $message->file_path, PATHINFO_EXTENSION), $message->mime_type];
     }
 
     private function authorizeOrFail(bool $allowed): void

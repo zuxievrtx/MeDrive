@@ -158,6 +158,14 @@ class Report extends Model
     }
 
     /**
+     * @return HasMany<ChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    /**
      * @return HasMany<ReportStatusLog, $this>
      */
     public function statusLogs(): HasMany

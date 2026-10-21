@@ -9,6 +9,8 @@ use App\Models\DriverShift;
 use App\Models\ReportDispatch;
 use App\Models\ReportPatient;
 use App\Models\User;
+use App\Services\Routing\OsrmProvider;
+use App\Services\Routing\RouteProvider;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -27,7 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Ganti binding ini untuk memakai penyedia rute lain tanpa mengubah endpoint.
+        $this->app->bind(RouteProvider::class, OsrmProvider::class);
     }
 
     /**
@@ -84,6 +87,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api-location', fn (Request $request): Limit => Limit::perMinute(60)->by('location:'.$byToken($request)));
 
         RateLimiter::for('api-reports', fn (Request $request): Limit => Limit::perMinute(10)->by('reports:'.$byToken($request)));
+
+        RateLimiter::for('api-chat', fn (Request $request): Limit => Limit::perMinute((int) config('medrive.chat.messages_per_minute'))->by('chat:'.$byToken($request)));
+
+        RateLimiter::for('api-geocode', fn (Request $request): Limit => Limit::perMinute((int) config('medrive.geocoding.requests_per_minute'))->by('geocode:'.$byToken($request)));
 
         // Dashboard memuat beberapa panel sekaligus dan mem-polling saat websocket putus, jadi batasnya lebih longgar.
         RateLimiter::for('api-admin', fn (Request $request): Limit => Limit::perMinute(300)->by('admin:'.$byToken($request)));

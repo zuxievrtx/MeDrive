@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\Driver;
+use App\Http\Controllers\Api\V1\GeocodeController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\Reporter;
 use Illuminate\Support\Facades\Route;
@@ -23,7 +25,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     // Berkas privat dibuka lewat <img>/tautan, jadi tidak mewajibkan header Accept JSON.
     Route::get('media/{type}/{id}', MediaController::class)
         ->middleware(['auth:sanctum', 'throttle:api'])
-        ->whereIn('type', ['driver-photo', 'certification', 'attachment'])
+        ->whereIn('type', ['driver-photo', 'certification', 'attachment', 'chat'])
         ->whereNumber('id')
         ->name('media');
 
@@ -49,6 +51,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         Route::get('me', [AuthController::class, 'me'])->middleware(['auth:sanctum', 'role:pelapor,driver', 'throttle:api'])->name('me');
 
+        // Proxy Nominatim untuk kedua aplikasi mobile (aplikasi dilarang memanggil Nominatim langsung).
+        Route::prefix('geocode')->name('geocode.')
+            ->middleware(['auth:sanctum', 'role:pelapor,driver', 'password.changed', 'throttle:api-geocode'])
+            ->group(function () {
+                Route::get('reverse', [GeocodeController::class, 'reverse'])->name('reverse');
+                Route::get('search', [GeocodeController::class, 'search'])->name('search');
+            });
+
         Route::prefix('reporter')->name('reporter.')
             ->middleware(['auth:sanctum', 'abilities:reporter', 'role:pelapor', 'password.changed'])
             ->group(function () {
@@ -59,7 +69,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('reports', [Reporter\ReportController::class, 'index'])->name('reports.index');
                     Route::get('reports/{report}', [Reporter\ReportController::class, 'show'])->name('reports.show');
                     Route::get('reports/{report}/driver-location', [Reporter\ReportController::class, 'driverLocation'])->name('reports.driver-location');
+                    Route::get('reports/{report}/route', [Reporter\ReportController::class, 'route'])->name('reports.route');
+                    Route::put('profile', Reporter\ProfileController::class)->name('profile.update');
+                    Route::get('reports/{report}/chat', [ChatController::class, 'index'])->name('reports.chat.index');
+                    Route::post('reports/{report}/chat/read', [ChatController::class, 'read'])->name('reports.chat.read');
+                    Route::get('chat/unread-count', [ChatController::class, 'unreadCount'])->name('chat.unread-count');
                 });
+
+                Route::post('reports/{report}/chat', [ChatController::class, 'store'])->middleware('throttle:api-chat')->name('reports.chat.store');
             });
 
         Route::prefix('driver')->name('driver.')
@@ -81,7 +98,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::post('reports/{report}/patients', [Driver\PatientController::class, 'store'])->name('reports.patients.store');
                     Route::put('patients/{patient}', [Driver\PatientController::class, 'update'])->name('patients.update');
                     Route::post('reports/{report}/attachments', Driver\AttachmentController::class)->name('reports.attachments.store');
+                    Route::get('route', Driver\RouteController::class)->name('route');
+                    Route::get('reports/{report}/chat', [ChatController::class, 'index'])->name('reports.chat.index');
+                    Route::post('reports/{report}/chat/read', [ChatController::class, 'read'])->name('reports.chat.read');
+                    Route::get('chat/unread-count', [ChatController::class, 'unreadCount'])->name('chat.unread-count');
                 });
+
+                Route::post('reports/{report}/chat', [ChatController::class, 'store'])->middleware('throttle:api-chat')->name('reports.chat.store');
             });
 
         Route::prefix('admin')->name('admin.')

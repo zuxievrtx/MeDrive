@@ -1,5 +1,7 @@
 # Deploy Medrive
 
+Repo berbentuk monorepo: semua perintah di dokumen ini dijalankan dari folder `backend/` (path contoh `/var/www/medrive` = isi folder `backend/`).
+
 Medrive butuh empat proses: web (PHP-FPM / Octane), queue worker, Reverb (WebSocket), dan scheduler. Redis tidak wajib: cache, antrean, buffer lokasi, idempotency, dan lock berjalan di MySQL (`CACHE_STORE=database`, `QUEUE_CONNECTION=database`).
 
 ## 1. Kebutuhan
@@ -32,6 +34,9 @@ Nilai `.env` yang wajib diubah untuk produksi:
 | `REVERB_APP_KEY`, `REVERB_APP_SECRET` | String acak; key yang sama dipakai aplikasi Flutter |
 | `REVERB_HOST`, `REVERB_PORT=443`, `REVERB_SCHEME=https` | Alamat publik WebSocket (lewat reverse proxy) |
 | `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` | Dari service account Firebase. Kosong = mode log-only |
+| `OSRM_BASE_URL` | URL OSRM self-host (data OSM Indonesia). `router.project-osrm.org` hanya untuk pengembangan |
+| `NOMINATIM_BASE_URL`, `NOMINATIM_USER_AGENT` | Nominatim sendiri atau server publik dengan User-Agent yang mengenali aplikasi; batas server publik 1 permintaan/detik |
+| `CORS_ALLOWED_ORIGINS` | Origin browser yang boleh memanggil API; default `APP_URL` |
 
 Setelah mengubah `.env` di produksi, jalankan ulang `php artisan config:cache`, lalu `php artisan queue:restart` dan `php artisan reverb:restart`.
 

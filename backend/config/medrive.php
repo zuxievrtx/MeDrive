@@ -104,4 +104,51 @@ return [
         'max_kb' => 2048,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Chat pelapor <-> driver
+    |--------------------------------------------------------------------------
+    | Foto dibatasi 1 MB di server; aplikasi diminta mengompres ke ~300 KB sebelum kirim.
+    */
+    'chat' => [
+        'per_page' => 30,
+        'image_max_kb' => 1024,
+        'messages_per_minute' => 30,
+        'push_preview_chars' => 80,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rute jalan + ETA (proxy OSRM)
+    |--------------------------------------------------------------------------
+    | Server publik router.project-osrm.org hanya untuk pengembangan; produksi wajib self-host OSRM.
+    */
+    'routing' => [
+        'osrm_base_url' => env('OSRM_BASE_URL', 'https://router.project-osrm.org'),
+        'timeout_seconds' => 8,
+        'cache_seconds' => 60,
+        // Maksimal satu panggilan upstream per laporan dalam jendela ini; selebihnya dilayani cache.
+        'upstream_interval_seconds' => 30,
+        // Cadangan terakhir per laporan untuk respons stale saat OSRM gagal.
+        'stale_cache_seconds' => 3600,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Geocoding (proxy Nominatim)
+    |--------------------------------------------------------------------------
+    | Aplikasi mobile tidak boleh memanggil Nominatim langsung; semua lewat /api/v1/geocode/*.
+    */
+    'geocoding' => [
+        'nominatim_base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'MedriveBackend/1.0 (+'.env('APP_URL', 'http://localhost').')'),
+        'country_codes' => env('NOMINATIM_COUNTRY_CODES', 'id'),
+        'timeout_seconds' => 8,
+        'reverse_cache_seconds' => 86400,
+        'search_cache_seconds' => 600,
+        'requests_per_minute' => 30,
+        // Kebijakan server publik Nominatim: maksimal 1 permintaan per detik untuk seluruh aplikasi.
+        'upstream_per_second' => (int) env('NOMINATIM_UPSTREAM_PER_SECOND', 1),
+    ],
+
 ];

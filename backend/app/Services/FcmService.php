@@ -47,10 +47,13 @@ class FcmService
         $data = array_map(fn ($value): string => (string) $value, array_filter($data, fn ($value) => $value !== null));
 
         if (! $this->isConfigured()) {
+            // Isi chat tidak boleh masuk log (log bisa dibaca operator/admin server).
+            $isChat = ($data['type'] ?? null) === 'chat';
+
             Log::info('[FCM log-only] notifikasi tidak dikirim karena kredensial kosong', [
                 'token' => substr($token, 0, 12).'...',
-                'title' => $title,
-                'body' => $body,
+                'title' => $isChat ? '[chat]' : $title,
+                'body' => $isChat ? '[isi chat disembunyikan]' : $body,
                 'data' => $data,
             ]);
 

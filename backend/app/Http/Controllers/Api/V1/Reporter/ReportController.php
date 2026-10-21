@@ -11,6 +11,7 @@ use App\Http\Resources\ReportResource;
 use App\Models\Report;
 use App\Services\LocationService;
 use App\Services\ReportService;
+use App\Services\Routing\RouteService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -85,6 +86,19 @@ class ReportController extends ApiController
             'location' => $location,
             'channel' => 'private-report.'.$report->id,
         ]);
+    }
+
+    /**
+     * Rute & ETA ambulans
+     *
+     * Dari posisi terakhir ambulans ke titik jemput (ke tujuan antar saat status mengantar pasien).
+     * Bila OSRM gagal dan ada rute lama, respons berisi rute itu dengan stale = true.
+     */
+    public function route(Request $request, Report $report, RouteService $routes): JsonResponse
+    {
+        $this->ensureOwner($request, $report);
+
+        return $this->ok(['report_id' => $report->id, ...$routes->forReport($report)]);
     }
 
     private function ensureOwner(Request $request, Report $report): void

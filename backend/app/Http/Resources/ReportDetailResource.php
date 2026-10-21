@@ -29,6 +29,7 @@ class ReportDetailResource extends ReportResource
                 'id' => $this->driver->id,
                 'name' => $this->driver->name,
                 'phone' => $this->driver->phone,
+                'is_verified' => $this->driver->is_verified_driver,
                 'photo_url' => $this->driver->driverProfile?->photo_path ? route('api.v1.media', ['type' => 'driver-photo', 'id' => $this->driver->id]) : null,
                 'clinic' => $this->driver->driverProfile?->relationLoaded('clinic') ? $this->driver->driverProfile->clinic?->name : null,
                 'last_location' => $this->driver->relationLoaded('lastLocation') && $this->driver->lastLocation

@@ -17,6 +17,12 @@ tags:
     name: Driver
     description: ''
   -
+    name: Chat
+    description: ''
+  -
+    name: Geocoding
+    description: ''
+  -
     name: Admin
     description: ''
   -
@@ -345,6 +351,51 @@ paths:
         required: true
         schema:
           type: integer
+  '/api/v1/reporter/reports/{report_id}/route':
+    get:
+      summary: 'Rute & ETA ambulans'
+      operationId: ruteETAAmbulans
+      description: "Dari posisi terakhir ambulans ke titik jemput (ke tujuan antar saat status mengantar pasien).\nBila OSRM gagal dan ada rute lama, respons berisi rute itu dengan stale = true."
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/reporter/profile:
+    put:
+      summary: 'Ubah profil pelapor'
+      operationId: ubahProfilPelapor
+      description: 'Hanya nama dan telepon. Email dan role tidak bisa diubah lewat endpoint ini.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Pelapor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                phone:
+                  type: string
+                  description: 'Must match the regex /^[0-9+\-\s]{8,20}$/. Must not be greater than 20 characters.'
+                  example: ngzmiyvdljnikhwa
+              required:
+                - name
+                - phone
   /api/v1/driver/location:
     post:
       summary: ''
@@ -542,7 +593,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: dalam_perjalanan
+                  example: selesai
                   enum:
                     - dalam_perjalanan
                     - tiba_di_lokasi
@@ -635,7 +686,7 @@ paths:
                 handed_over_at:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>now</code>.'
-                  example: '2022-11-09'
+                  example: '2022-11-15'
                   nullable: true
     parameters:
       -
@@ -692,7 +743,7 @@ paths:
                 is_breathing:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                   nullable: true
                 condition_note:
                   type: string
@@ -707,7 +758,7 @@ paths:
                 handed_over_at:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>now</code>.'
-                  example: '2022-11-09'
+                  example: '2022-11-15'
                   nullable: true
     parameters:
       -
@@ -749,6 +800,247 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/driver/route:
+    get:
+      summary: 'Rute ke TKP'
+      operationId: ruteKeTKP
+      description: "Dari posisi terakhir driver ke titik jemput laporan aktif (ke tujuan antar saat status mengantar pasien).\nDi-cache 60 detik; OSRM dipanggil paling sering sekali per 30 detik per laporan."
+      parameters: []
+      responses: {  }
+      tags:
+        - Driver
+  '/api/v1/reporter/reports/{report_id}/chat':
+    get:
+      summary: 'Riwayat chat'
+      operationId: riwayatChat
+      description: 'Urut lama → baru, 30 pesan per halaman. Kirim before_id = meta.cursor.next_before_id untuk memuat pesan yang lebih lama.'
+      parameters:
+        -
+          in: query
+          name: before_id
+          description: 'ID pesan tertua yang sudah dimuat.'
+          example: 120
+          required: false
+          schema:
+            type: integer
+            description: 'ID pesan tertua yang sudah dimuat.'
+            example: 120
+      responses: {  }
+      tags:
+        - Chat
+    post:
+      summary: 'Kirim pesan'
+      operationId: kirimPesan
+      description: 'Hanya selama laporan aktif (diambil sampai mengantar pasien); selain itu 409 chat_closed. Maksimal 30 pesan/menit.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: ''
+                  example: text
+                  enum:
+                    - text
+                    - image
+                body:
+                  type: string
+                  description: 'This field is required when <code>type</code> is <code>text</code>. Must not be greater than 1000 characters.'
+                  example: b
+                  nullable: true
+                image:
+                  type: string
+                  format: binary
+                  description: 'This field is required when <code>type</code> is <code>image</code>. Must be an image. Must not be greater than 1024 kilobytes.'
+                  nullable: true
+              required:
+                - type
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/reporter/reports/{report_id}/chat/read':
+    post:
+      summary: 'Tandai pesan lawan bicara sudah dibaca'
+      operationId: tandaiPesanLawanBicaraSudahDibaca
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/reporter/chat/unread-count:
+    get:
+      summary: 'Jumlah pesan belum dibaca'
+      operationId: jumlahPesanBelumDibaca
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+  '/api/v1/driver/reports/{report_id}/chat':
+    get:
+      summary: 'Riwayat chat'
+      operationId: riwayatChat
+      description: 'Urut lama → baru, 30 pesan per halaman. Kirim before_id = meta.cursor.next_before_id untuk memuat pesan yang lebih lama.'
+      parameters:
+        -
+          in: query
+          name: before_id
+          description: 'ID pesan tertua yang sudah dimuat.'
+          example: 120
+          required: false
+          schema:
+            type: integer
+            description: 'ID pesan tertua yang sudah dimuat.'
+            example: 120
+      responses: {  }
+      tags:
+        - Chat
+    post:
+      summary: 'Kirim pesan'
+      operationId: kirimPesan
+      description: 'Hanya selama laporan aktif (diambil sampai mengantar pasien); selain itu 409 chat_closed. Maksimal 30 pesan/menit.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: ''
+                  example: image
+                  enum:
+                    - text
+                    - image
+                body:
+                  type: string
+                  description: 'This field is required when <code>type</code> is <code>text</code>. Must not be greater than 1000 characters.'
+                  example: b
+                  nullable: true
+                image:
+                  type: string
+                  format: binary
+                  description: 'This field is required when <code>type</code> is <code>image</code>. Must be an image. Must not be greater than 1024 kilobytes.'
+                  nullable: true
+              required:
+                - type
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/driver/reports/{report_id}/chat/read':
+    post:
+      summary: 'Tandai pesan lawan bicara sudah dibaca'
+      operationId: tandaiPesanLawanBicaraSudahDibaca
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+    parameters:
+      -
+        in: path
+        name: report_id
+        description: 'The ID of the report.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/driver/chat/unread-count:
+    get:
+      summary: 'Jumlah pesan belum dibaca'
+      operationId: jumlahPesanBelumDibaca
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Chat
+  /api/v1/geocode/reverse:
+    get:
+      summary: 'Alamat dari koordinat'
+      operationId: alamatDariKoordinat
+      description: 'Hasil di-cache 24 jam per titik (5 desimal). address bernilai null bila Nominatim tidak menemukan alamat.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Geocoding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  description: 'Must be between -90 and 90.'
+                  example: -89
+                lng:
+                  type: number
+                  description: 'Must be between -180 and 180.'
+                  example: -179
+              required:
+                - lat
+                - lng
+  /api/v1/geocode/search:
+    get:
+      summary: 'Cari tempat'
+      operationId: cariTempat
+      description: 'Dibatasi wilayah Indonesia, di-cache 10 menit per kata kunci.'
+      parameters: []
+      responses: {  }
+      tags:
+        - Geocoding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: 'Must be at least 3 characters. Must not be greater than 200 characters.'
+                  example: b
+                limit:
+                  type: integer
+                  description: 'Must be between 1 and 10.'
+                  example: 2
+                  nullable: true
+              required:
+                - q
   /api/v1/admin/reports/export:
     get:
       summary: ''
@@ -964,11 +1256,11 @@ paths:
                 issued_at:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-                  example: '2022-11-09'
+                  example: '2022-11-15'
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>issued_at</code>.'
-                  example: '2052-11-08'
+                  example: '2052-11-13'
                   nullable: true
                 file:
                   type: string
@@ -1021,7 +1313,7 @@ paths:
                 shift:
                   type: string
                   description: ''
-                  example: tidak
+                  example: aktif
                   enum:
                     - aktif
                     - tidak
@@ -1098,7 +1390,7 @@ paths:
                 license_class:
                   type: string
                   description: ''
-                  example: B1_umum
+                  example: B2
                   enum:
                     - A
                     - A_umum
@@ -1109,7 +1401,7 @@ paths:
                 license_expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>tomorrow</code>.'
-                  example: '2052-11-09'
+                  example: '2052-11-14'
                 photo:
                   type: string
                   format: binary
@@ -1139,11 +1431,11 @@ paths:
                       issued_at:
                         type: string
                         description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-                        example: '2022-11-09'
+                        example: '2022-11-15'
                       expires_at:
                         type: string
                         description: 'Must be a valid date. Must be a date after <code>certifications.*.issued_at</code>.'
-                        example: '2052-11-08'
+                        example: '2052-11-13'
                         nullable: true
                       file:
                         type: string
@@ -1219,7 +1511,7 @@ paths:
                 license_class:
                   type: string
                   description: ''
-                  example: B1_umum
+                  example: B1
                   enum:
                     - A
                     - A_umum
@@ -1230,7 +1522,7 @@ paths:
                 license_expires_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-10-16T00:27:48'
+                  example: '2026-10-21T18:25:09'
                 photo:
                   type: string
                   format: binary
@@ -1286,11 +1578,11 @@ paths:
                 issued_at:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-                  example: '2022-11-09'
+                  example: '2022-11-15'
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>issued_at</code>.'
-                  example: '2052-11-08'
+                  example: '2052-11-13'
                   nullable: true
                 file:
                   type: string
@@ -1381,7 +1673,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: pemerintah
+                  example: swasta
                   enum:
                     - pemerintah
                     - swasta
@@ -1467,7 +1759,7 @@ paths:
                 is_active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - code
                 - name
@@ -1518,7 +1810,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: puskesmas
+                  example: rumah_sakit
                   enum:
                     - klinik
                     - puskesmas
@@ -1528,7 +1820,7 @@ paths:
                 active:
                   type: string
                   description: ''
-                  example: 0
+                  example: 1
                   enum:
                     - 1
                     - 0
@@ -1563,7 +1855,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: pos_ambulans
+                  example: puskesmas
                   enum:
                     - klinik
                     - puskesmas
@@ -1840,7 +2132,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: nonaktif
+                  example: perawatan
                   enum:
                     - tersedia
                     - perawatan
@@ -1904,7 +2196,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: nonaktif
+                  example: tersedia
                   enum:
                     - tersedia
                     - perawatan
@@ -2143,12 +2435,12 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-10-16T00:27:48'
+                  example: '2026-10-21T18:25:10'
                   nullable: true
                 to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>from</code>.'
-                  example: '2052-11-08'
+                  example: '2052-11-13'
                   nullable: true
   /api/v1/admin/users:
     get:
@@ -2174,7 +2466,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: nonaktif
+                  example: aktif
                   enum:
                     - aktif
                     - nonaktif
@@ -2219,7 +2511,7 @@ paths:
         in: path
         name: type
         description: ''
-        example: driver-photo|certification|attachment
+        example: driver-photo|certification|attachment|chat
         required: true
         schema:
           type: string
