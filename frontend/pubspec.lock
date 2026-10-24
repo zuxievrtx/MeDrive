@@ -57,6 +57,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
+  battery_plus:
+    dependency: transitive
+    description:
+      name: battery_plus
+      sha256: "49f75523cd5461a44202d67c5e1c73b790f16a822475b6f116d50714cd64a0ab"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.1.2"
+  battery_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: battery_plus_platform_interface
+      sha256: e8342c0f32de4b1dfd0223114b6785e48e579bfc398da9471c9179b907fa4910
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -1053,6 +1069,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  permission_handler:
+    dependency: transitive
+    description:
+      name: permission_handler
+      sha256: e6bcecadfe40df6b888141f23cbaf6ba6c3da49fb33f6ff887d060dd48544fbd
+      url: "https://pub.dev"
+    source: hosted
+    version: "13.0.2"
+  permission_handler_android:
+    dependency: transitive
+    description:
+      name: permission_handler_android
+      sha256: b1ce660f4d0dcaffdf2605a19544c129fb5adda4e6fd039992ae356c4e437039
+      url: "https://pub.dev"
+    source: hosted
+    version: "14.1.0"
+  permission_handler_apple:
+    dependency: transitive
+    description:
+      name: permission_handler_apple
+      sha256: b69e6b8300f9584af5ab81b41cdaa544e1b45e6fca0a30b0f9a9a120d90fc8a5
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.6.4"
+  permission_handler_html:
+    dependency: transitive
+    description:
+      name: permission_handler_html
+      sha256: "6ea98b3f17f60d3b527f2647ed2ab4dc0f6bfe25b22cb1c363f5d8f62252f6ac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.4+1"
+  permission_handler_platform_interface:
+    dependency: transitive
+    description:
+      name: permission_handler_platform_interface
+      sha256: ed86a61c190258fdd65de395ea0632822e3415c1faec38eae0c31b479c28a531
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.4.1"
+  permission_handler_windows:
+    dependency: transitive
+    description:
+      name: permission_handler_windows
+      sha256: caeae01858a0a7d2df67a445ac98e1ad95e55a0e77c73044f4e9b1c8c2289cbd
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
   petitparser:
     dependency: transitive
     description:
@@ -1330,6 +1394,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.9"
+  upower:
+    dependency: transitive
+    description:
+      name: upower
+      sha256: cf042403154751180affa1d15614db7fa50234bc2373cd21c3db666c38543ebf
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   url_launcher:
     dependency: transitive
     description:
@@ -1418,6 +1490,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "15.4.0"
+  wakelock_plus:
+    dependency: transitive
+    description:
+      name: wakelock_plus
+      sha256: "22b3e7e937721de70e63c85e7139f4ac781dc22863b9262431a53ac030eb074b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.8.0"
+  wakelock_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: wakelock_plus_platform_interface
+      sha256: "764c25504562abc8ac3406f5d175f126b276e6ba916c7c2675690b73368ca384"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.0"
   watcher:
     dependency: transitive
     description:

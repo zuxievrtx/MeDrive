@@ -19,18 +19,42 @@ class PushPayload {
   int? get reportId => int.tryParse(data['report_id'] ?? '');
 }
 
+/// Pesan FCM yang diterima saat aplikasi di depan. Kembalikan `true` bila aplikasi sudah
+/// menanganinya sendiri (mis. layar tawaran dispatch), sehingga notifikasi bawaan tidak ditampilkan.
+typedef ForegroundPushHandler = bool Function(PushPayload payload);
+
 /// FCM + notifikasi lokal. Semua langkah dibungkus try-catch: tanpa google-services.json atau
-/// opsi Firebase dari `--dart-define`, aplikasi tetap berjalan, hanya tanpa push.
+/// opsi Firebase dari `--dart-define`, aplikasi tetap berjalan, hanya tanpa push. Notifikasi lokal
+/// tetap disiapkan walau Firebase tidak aktif (dipakai alarm tawaran di aplikasi driver).
 class PushService {
-  PushService({required this._config});
+  PushService({
+    required this._config,
+    this.channel = defaultChannel,
+    this.extraChannels = const [],
+    FlutterLocalNotificationsPlugin? localNotifications,
+  }) : local = localNotifications ?? FlutterLocalNotificationsPlugin();
 
   final AppConfig _config;
-  final _local = FlutterLocalNotificationsPlugin();
+
+  /// Kanal notifikasi untuk push yang ditampilkan saat aplikasi di depan.
+  final AndroidNotificationChannel channel;
+
+  /// Kanal tambahan yang dibuat saat inisialisasi (mis. alarm tawaran driver).
+  final List<AndroidNotificationChannel> extraChannels;
+
+  /// Plugin notifikasi lokal bersama; ketukan pada notifikasi apa pun yang membawa payload JSON
+  /// diteruskan ke [onTap].
+  final FlutterLocalNotificationsPlugin local;
+
   final _taps = StreamController<PushPayload>.broadcast();
   StreamSubscription<String>? _tokenRefresh;
   bool _available = false;
+  bool _localReady = false;
 
-  static const _channel = AndroidNotificationChannel(
+  /// Penangan pesan saat aplikasi di depan (opsional).
+  ForegroundPushHandler? onForegroundMessage;
+
+  static const defaultChannel = AndroidNotificationChannel(
     'medrive_reports',
     'Status laporan & chat',
     description: 'Perubahan status laporan dan pesan dari driver ambulans.',
@@ -40,10 +64,15 @@ class PushService {
   /// Firebase berhasil diinisialisasi.
   bool get isAvailable => _available;
 
+  /// Notifikasi lokal siap dipakai.
+  bool get isLocalReady => _localReady;
+
   /// Notifikasi yang diketuk pengguna (dari background, terminated, atau foreground).
   Stream<PushPayload> get onTap => _taps.stream;
 
   Future<void> initialize() async {
+    await _initializeLocal();
+
     try {
       final firebase = _config.firebase;
       await Firebase.initializeApp(
@@ -64,29 +93,62 @@ class PushService {
     }
 
     try {
-      await _local.initialize(
-        settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
-        onDidReceiveNotificationResponse: (response) {
-          final payload = response.payload;
-          if (payload != null) {
-            _taps.add(PushPayload(Map<String, String>.from(jsonDecode(payload) as Map)));
-          }
-        },
-      );
-      await _local
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(_channel);
-
-      FirebaseMessaging.onMessage.listen(_showForeground);
+      FirebaseMessaging.onMessage.listen(_onForeground);
       FirebaseMessaging.onMessageOpenedApp.listen((message) => _taps.add(_payload(message)));
 
       final initial = await FirebaseMessaging.instance.getInitialMessage();
       if (initial != null) {
         // Ditunda agar router sempat siap sebelum navigasi deep-link.
-        Future<void>.delayed(const Duration(milliseconds: 600), () => _taps.add(_payload(initial)));
+        _emitLater(_payload(initial));
       }
     } catch (error) {
-      debugPrint('Inisialisasi notifikasi gagal: $error');
+      debugPrint('Inisialisasi FCM gagal: $error');
+    }
+  }
+
+  Future<void> _initializeLocal() async {
+    try {
+      await local.initialize(
+        settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+        onDidReceiveNotificationResponse: (response) {
+          final payload = _decode(response.payload);
+          if (payload != null) {
+            _taps.add(payload);
+          }
+        },
+      );
+      final android = local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      for (final item in [channel, ...extraChannels]) {
+        await android?.createNotificationChannel(item);
+      }
+      _localReady = true;
+
+      // Aplikasi dibuka dari notifikasi lokal (mis. full-screen intent tawaran saat layar terkunci).
+      final launch = await local.getNotificationAppLaunchDetails();
+      if (launch?.didNotificationLaunchApp ?? false) {
+        final payload = _decode(launch!.notificationResponse?.payload);
+        if (payload != null) {
+          _emitLater(payload);
+        }
+      }
+    } catch (error) {
+      debugPrint('Inisialisasi notifikasi lokal gagal: $error');
+    }
+  }
+
+  void _emitLater(PushPayload payload) {
+    Future<void>.delayed(const Duration(milliseconds: 600), () => _taps.add(payload));
+  }
+
+  static PushPayload? _decode(String? payload) {
+    if (payload == null) {
+      return null;
+    }
+    try {
+      final decoded = jsonDecode(payload);
+      return decoded is Map ? PushPayload(decoded.map((key, value) => MapEntry('$key', '$value'))) : null;
+    } on FormatException {
+      return null;
     }
   }
 
@@ -98,9 +160,7 @@ class PushService {
 
     try {
       await FirebaseMessaging.instance.requestPermission();
-      await _local
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
+      await local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
 
       // Backend mengirim lewat FCM HTTP v1 `message.token`, yang membutuhkan registration token,
       // bukan Firebase Installation ID dari API register()/onRegistered.
@@ -132,27 +192,35 @@ class PushService {
     }
   }
 
-  Future<void> _showForeground(RemoteMessage message) async {
+  Future<void> _onForeground(RemoteMessage message) async {
+    final payload = _payload(message);
+    if (onForegroundMessage?.call(payload) ?? false) {
+      return;
+    }
+    await _showForeground(message, payload);
+  }
+
+  Future<void> _showForeground(RemoteMessage message, PushPayload payload) async {
     final notification = message.notification;
     if (notification == null) {
       return;
     }
 
-    await _local.show(
+    await local.show(
       id: message.hashCode,
       title: notification.title,
       body: notification.body,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
-          _channel.id,
-          _channel.name,
-          channelDescription: _channel.description,
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
         ),
       ),
-      payload: jsonEncode(_payload(message).data),
+      payload: jsonEncode(payload.data),
     );
   }
 

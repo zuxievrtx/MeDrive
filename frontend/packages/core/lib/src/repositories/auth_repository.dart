@@ -1,23 +1,30 @@
 import '../api/api_client.dart';
 import '../api/api_error.dart';
+import '../config/app_role.dart';
 import '../models/user.dart';
 import '../storage/token_storage.dart';
 
-/// Autentikasi pelapor: `/auth/*`, `/me`, dan profil `/reporter/profile`.
+/// Autentikasi mobile: `/auth/*`, `/me`, dan profil `/reporter/profile`. [role] menentukan akun
+/// yang boleh masuk; akun dengan role lain langsung dicabut tokennya.
 class AuthRepository {
-  AuthRepository(this._api, this._tokens);
+  AuthRepository(this._api, this._tokens, {this.role = AppRole.reporter});
 
   final ApiClient _api;
   final TokenStorage _tokens;
+  final AppRole role;
 
+  /// Nama perangkat bawaan aplikasi pelapor (dipertahankan untuk kompatibilitas).
   static const deviceName = 'MeDrive Android';
 
   Future<bool> hasToken() async => (await _tokens.read()) != null;
 
+  /// Akun boleh memakai aplikasi ini.
+  bool accepts(AppUser user) => user.role.value == role.userRole;
+
   Future<AuthSession> login({required String email, required String password}) async {
     final response = await _api.post(
       '/auth/login',
-      data: {'email': email.trim(), 'password': password, 'device_name': deviceName},
+      data: {'email': email.trim(), 'password': password, 'device_name': role.deviceName},
     );
     return _startSession(response.data);
   }
@@ -35,7 +42,7 @@ class AuthRepository {
       'email': email.trim(),
       'password': password,
       'password_confirmation': passwordConfirmation,
-      'device_name': deviceName,
+      'device_name': role.deviceName,
     });
     return _startSession(response.data);
   }
@@ -90,17 +97,14 @@ class AuthRepository {
   Future<AuthSession> _startSession(Object? data) async {
     final session = AuthSession.fromJson(_map(data));
 
-    // Aplikasi ini hanya untuk pelapor; akun driver memakai aplikasi MeDrive Driver.
-    if (!session.user.isReporter) {
+    // Satu aplikasi satu role: pelapor di MeDrive, driver di MeDriveR.
+    if (!accepts(session.user)) {
       try {
         await _api.post('/auth/logout', headers: {'Authorization': 'Bearer ${session.token}'});
       } on ApiError {
         // Token dibiarkan kedaluwarsa di server; yang penting tidak disimpan di perangkat.
       }
-      throw const ApiError(
-        code: 'wrong_app',
-        message: 'Akun ini bukan akun pelapor. Driver memakai aplikasi MeDrive Driver.',
-      );
+      throw ApiError(code: 'wrong_app', message: role.wrongAppMessage);
     }
 
     await _tokens.write(session.token);

@@ -64,6 +64,18 @@ abstract class ReportDriver with _$ReportDriver {
   factory ReportDriver.fromJson(Map<String, dynamic> json) => _$ReportDriverFromJson(json);
 }
 
+/// Pelapor pada laporan yang ditangani driver (`GET /driver/reports/{id}`).
+@freezed
+abstract class ReportReporter with _$ReportReporter {
+  const factory ReportReporter({
+    required int id,
+    required String name,
+    String? phone,
+  }) = _ReportReporter;
+
+  factory ReportReporter.fromJson(Map<String, dynamic> json) => _$ReportReporterFromJson(json);
+}
+
 @freezed
 abstract class ReportAmbulance with _$ReportAmbulance {
   const factory ReportAmbulance({
@@ -191,6 +203,7 @@ abstract class Report with _$Report {
     required double longitude,
     ReportDestination? destination,
     ReportDriver? driver,
+    ReportReporter? reporter,
     ReportAmbulance? ambulance,
     DateTime? createdAt,
     DateTime? takenAt,
@@ -217,4 +230,11 @@ abstract class Report with _$Report {
   bool get isWaiting => status.value == ReportStatus.menunggu;
 
   String get typeName => reportType?.name ?? 'Laporan';
+
+  /// Jenis laporan dengan tujuan antar (ibu hamil, jenazah) wajib melewati `mengantar_pasien`.
+  bool get requiresDestination => reportType?.requiresDestination ?? false;
+
+  /// Serah terima lengkap: minimal satu pasien dan setiap pasien punya penerima.
+  bool get allPatientsHandedOver =>
+      patients.isNotEmpty && patients.every((patient) => (patient.handedOverTo ?? '').trim().isNotEmpty);
 }

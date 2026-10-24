@@ -25,6 +25,8 @@ abstract class AppUser with _$AppUser {
 
   bool get isReporter => role.value == 'pelapor';
 
+  bool get isDriver => role.value == 'driver';
+
   String get displayInitials {
     if (initials != null && initials!.isNotEmpty) {
       return initials!;

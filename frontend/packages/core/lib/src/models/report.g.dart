@@ -42,6 +42,20 @@ Map<String, dynamic> _$ReportDriverToJson(_ReportDriver instance) =>
       'clinic': instance.clinic,
     };
 
+_ReportReporter _$ReportReporterFromJson(Map<String, dynamic> json) =>
+    _ReportReporter(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      phone: json['phone'] as String?,
+    );
+
+Map<String, dynamic> _$ReportReporterToJson(_ReportReporter instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'phone': instance.phone,
+    };
+
 _ReportAmbulance _$ReportAmbulanceFromJson(Map<String, dynamic> json) =>
     _ReportAmbulance(
       id: (json['id'] as num?)?.toInt(),
@@ -277,6 +291,9 @@ _Report _$ReportFromJson(Map<String, dynamic> json) => _Report(
   driver: json['driver'] == null
       ? null
       : ReportDriver.fromJson(json['driver'] as Map<String, dynamic>),
+  reporter: json['reporter'] == null
+      ? null
+      : ReportReporter.fromJson(json['reporter'] as Map<String, dynamic>),
   ambulance: json['ambulance'] == null
       ? null
       : ReportAmbulance.fromJson(json['ambulance'] as Map<String, dynamic>),
@@ -327,6 +344,7 @@ Map<String, dynamic> _$ReportToJson(_Report instance) => <String, dynamic>{
   'longitude': instance.longitude,
   'destination': instance.destination?.toJson(),
   'driver': instance.driver?.toJson(),
+  'reporter': instance.reporter?.toJson(),
   'ambulance': instance.ambulance?.toJson(),
   'created_at': instance.createdAt?.toIso8601String(),
   'taken_at': instance.takenAt?.toIso8601String(),

@@ -29,6 +29,20 @@ abstract class DriverLocation with _$DriverLocation {
   factory DriverLocation.fromJson(Map<String, dynamic> json) => _$DriverLocationFromJson(json);
 }
 
+/// Instansi induk klinik (dimuat di profil driver: klinik → instansi).
+@freezed
+abstract class Institution with _$Institution {
+  const factory Institution({
+    required int id,
+    required String name,
+    String? code,
+    LabeledValue? type,
+    String? phone,
+  }) = _Institution;
+
+  factory Institution.fromJson(Map<String, dynamic> json) => _$InstitutionFromJson(json);
+}
+
 @freezed
 abstract class Clinic with _$Clinic {
   const factory Clinic({
@@ -40,6 +54,7 @@ abstract class Clinic with _$Clinic {
     double? latitude,
     double? longitude,
     LabeledValue? type,
+    Institution? institution,
   }) = _Clinic;
 
   factory Clinic.fromJson(Map<String, dynamic> json) => _$ClinicFromJson(json);
@@ -69,7 +84,8 @@ abstract class ReverseGeocode with _$ReverseGeocode {
   factory ReverseGeocode.fromJson(Map<String, dynamic> json) => _$ReverseGeocodeFromJson(json);
 }
 
-/// Rute ambulans → tujuan dari `/reporter/reports/{id}/route`. [geometry] berisi `[lat, lng]`.
+/// Rute ambulans → tujuan dari `/reporter/reports/{id}/route` atau `/driver/route`.
+/// [geometry] berisi `[lat, lng]`.
 @freezed
 abstract class RouteResult with _$RouteResult {
   const RouteResult._();

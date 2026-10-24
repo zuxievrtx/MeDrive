@@ -48,7 +48,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _input.addListener(() => setState(() {}));
     unawaited(_loadLatest(initial: true));
     unawaited(_subscribe());
     _poll = Timer.periodic(const Duration(seconds: 10), (_) {
@@ -287,7 +286,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: Column(
         children: [
           Expanded(child: _buildMessages()),
-          if (_isOpen) _buildComposer() else const _ClosedBanner(),
+          if (_isOpen) _buildComposer() else const ChatClosedBanner(),
         ],
       ),
     );
@@ -295,7 +294,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildMessages() {
     if (_loading) {
-      return const _ChatSkeleton();
+      return const ChatSkeleton();
     }
     if (_error != null) {
       return AsyncErrorView(
@@ -343,8 +342,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (newDay) _DayDivider(date: message.createdAt),
-              if (message.id == _firstUnreadId) const _UnreadDivider(),
+              if (newDay) ChatDayDivider(date: message.createdAt),
+              if (message.id == _firstUnreadId) const ChatUnreadDivider(),
               _Bubble(message: message, mine: _isMine(message)),
             ],
           );
@@ -362,54 +361,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return x.year == y.year && x.month == y.month && x.day == y.day;
   }
 
-  Widget _buildComposer() {
-    final canSend = _input.text.trim().isNotEmpty && !_sending;
-
-    return Material(
-      color: MedColors.surface,
-      elevation: 8,
-      shadowColor: Colors.black26,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(MedSpace.sm, MedSpace.sm, MedSpace.sm, MedSpace.sm),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              IconButton(
-                tooltip: 'Kirim foto',
-                onPressed: _sending ? null : _sendImage,
-                icon: const Icon(Icons.photo_camera_rounded, color: MedColors.inkMuted),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _input,
-                  minLines: 1,
-                  maxLines: 4,
-                  maxLength: _maxLength,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(hintText: 'Tulis pesan…', counterText: ''),
-                ),
-              ),
-              const SizedBox(width: MedSpace.xs),
-              IconButton.filled(
-                tooltip: 'Kirim',
-                onPressed: canSend ? _sendText : null,
-                icon: _sending
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                      )
-                    : const Icon(Icons.send_rounded),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildComposer() => ChatComposer(
+        controller: _input,
+        sending: _sending,
+        maxLength: _maxLength,
+        onSend: _sendText,
+        onPickImage: _sendImage,
+      );
 }
 
+/// Gelembung pesan: komponen bersama [ChatBubble] + gambar privat ber-token.
 class _Bubble extends StatelessWidget {
   const _Bubble({required this.message, required this.mine});
 
@@ -418,149 +379,17 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = mine ? Colors.white : MedColors.ink;
-    final radius = BorderRadius.only(
-      topLeft: const Radius.circular(18),
-      topRight: const Radius.circular(18),
-      bottomLeft: Radius.circular(mine ? 18 : 4),
-      bottomRight: Radius.circular(mine ? 4 : 18),
-    );
     final imageUrl = message.imageUrl;
+    final hasImage = message.isImage && imageUrl != null;
 
-    return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.76),
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 3),
-          padding: message.isImage ? const EdgeInsets.all(4) : const EdgeInsets.fromLTRB(14, 10, 14, 8),
-          decoration: BoxDecoration(color: mine ? MedColors.brandDeep : MedColors.field, borderRadius: radius),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (message.isImage && imageUrl != null)
-                GestureDetector(
-                  onTap: () => showImageViewer(context, imageUrl, caption: message.senderName),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Semantics(
-                      label: 'Foto dari ${mine ? 'Anda' : message.senderName ?? 'driver'}, ketuk untuk memperbesar',
-                      button: true,
-                      child: AuthImage(url: imageUrl, width: 220, height: 220),
-                    ),
-                  ),
-                )
-              else
-                Align(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: 1,
-                  child: Text(message.body ?? '', style: TextStyle(color: foreground, fontSize: 15.5, height: 1.35)),
-                ),
-              Padding(
-                padding: message.isImage ? const EdgeInsets.fromLTRB(8, 4, 8, 2) : const EdgeInsets.only(top: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      formatTime(message.createdAt),
-                      style: TextStyle(color: mine ? Colors.white : MedColors.inkMuted, fontSize: 11.5),
-                    ),
-                    if (mine) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        message.readAt == null ? Icons.done_rounded : Icons.done_all_rounded,
-                        size: 15,
-                        color: Colors.white,
-                        semanticLabel: message.readAt == null ? 'Terkirim' : 'Dibaca',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return ChatBubble(
+      mine: mine,
+      body: message.body,
+      sentAt: message.createdAt,
+      read: message.readAt != null,
+      image: hasImage ? AuthImage(url: imageUrl, width: 220, height: 220) : null,
+      imageLabel: hasImage ? 'Foto dari ${mine ? 'Anda' : message.senderName ?? 'driver'}, ketuk untuk memperbesar' : null,
+      onImageTap: hasImage ? () => showImageViewer(context, imageUrl, caption: message.senderName) : null,
     );
   }
-}
-
-class _DayDivider extends StatelessWidget {
-  const _DayDivider({required this.date});
-
-  final DateTime? date;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: MedSpace.md),
-        child: Center(
-          child: Text(formatDay(date), style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700, fontSize: 12.5)),
-        ),
-      );
-}
-
-class _UnreadDivider extends StatelessWidget {
-  const _UnreadDivider();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: MedSpace.sm),
-        child: Row(
-          children: [
-            Expanded(child: Divider(color: MedColors.brand)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: MedSpace.sm),
-              child: Text('Pesan baru', style: TextStyle(color: MedColors.brandDeep, fontWeight: FontWeight.w800, fontSize: 12.5)),
-            ),
-            Expanded(child: Divider(color: MedColors.brand)),
-          ],
-        ),
-      );
-}
-
-class _ClosedBanner extends StatelessWidget {
-  const _ClosedBanner();
-
-  @override
-  Widget build(BuildContext context) => const ColoredBox(
-        color: MedColors.field,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.all(MedSpace.lg),
-            child: Row(
-              children: [
-                Icon(Icons.lock_outline_rounded, color: MedColors.inkMuted),
-                SizedBox(width: MedSpace.md),
-                Expanded(
-                  child: Text(
-                    'Chat ditutup karena laporan sudah selesai. Riwayat pesan tetap bisa dibaca.',
-                    style: TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-}
-
-class _ChatSkeleton extends StatelessWidget {
-  const _ChatSkeleton();
-
-  @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(MedSpace.lg),
-        physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          Align(alignment: Alignment.centerLeft, child: Skeleton(width: 200, height: 44, radius: 18)),
-          SizedBox(height: MedSpace.sm),
-          Align(alignment: Alignment.centerRight, child: Skeleton(width: 160, height: 44, radius: 18)),
-          SizedBox(height: MedSpace.sm),
-          Align(alignment: Alignment.centerLeft, child: Skeleton(width: 240, height: 64, radius: 18)),
-          SizedBox(height: MedSpace.sm),
-          Align(alignment: Alignment.centerRight, child: Skeleton(width: 120, height: 44, radius: 18)),
-        ],
-      );
 }

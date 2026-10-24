@@ -6,13 +6,15 @@ Monorepo Flutter dengan **pub workspaces** (tanpa melos):
 frontend/
 ├── pubspec.yaml            # root workspace
 ├── apps/medrive/           # aplikasi pelapor (Android, com.medrive.pelapor)
+├── apps/medriver/          # aplikasi driver MeDriveR (Android, com.medrive.driver)
 ├── packages/core/          # medrive_core: config, ApiClient, model, repository, WebSocket, FCM
 ├── packages/ui/            # medrive_ui: token desain, tema, widget bersama, peta OSM
 ├── design/                 # ekspor Figma (pelapor/, driver/)
 └── ASSUMPTIONS.md          # keputusan & penyimpangan dari prompt/Figma
 ```
 
-`apps/medriver` (aplikasi driver) menyusul dan memakai `medrive_core` + `medrive_ui` yang sama.
+Kedua aplikasi memakai `medrive_core` + `medrive_ui` yang sama. Aplikasi driver meng-override
+`appRoleProvider` ke `AppRole.driver` (endpoint `/driver/...`, akun pelapor ditolak).
 
 ## Prasyarat
 
@@ -33,6 +35,9 @@ flutter run \
   --dart-define=WS_KEY=<REVERB_APP_KEY backend>
 ```
 
+Aplikasi driver dijalankan dengan cara yang sama dari `apps/medriver` (dart-define identik). Akun
+driver dibuat admin pusat dari dashboard; tidak ada registrasi di aplikasi.
+
 Tanpa `--dart-define` aplikasi memakai nilai pengembangan di atas (`10.0.2.2` = localhost komputer
 dari emulator Android; `WS_KEY` default `medrive-local-key`). Untuk perangkat fisik, pakai IP LAN
 komputer. Rilis wajib HTTPS/WSS (cleartext hanya diizinkan di build debug).
@@ -51,12 +56,15 @@ komputer. Rilis wajib HTTPS/WSS (cleartext hanya diizinkan di build debug).
 
 Aplikasi tetap berjalan tanpa Firebase; push hanya nonaktif. Untuk mengaktifkan, pilih salah satu:
 
-1. Letakkan `google-services.json` (package `com.medrive.pelapor`) di `apps/medrive/android/app/`.
+1. Letakkan `google-services.json` (package `com.medrive.pelapor`) di `apps/medrive/android/app/`,
+   dan untuk driver (package `com.medrive.driver`) di `apps/medriver/android/app/`.
    Plugin `com.google.gms.google-services` otomatis diterapkan bila berkas itu ada. Berkas ini
    di-*ignore* git.
 2. Atau isi keempat `FIREBASE_*` lewat `--dart-define`.
 
 Token FCM didaftarkan ke `POST /api/v1/auth/fcm` setelah login dan setiap kali token diperbarui.
+Di aplikasi driver, push `type=dispatch` memunculkan alarm full-screen (juga saat layar terkunci);
+tanpa Firebase, tawaran tetap masuk lewat tarik `GET /driver/dispatches/active` saat aplikasi dibuka.
 
 ## Kode hasil generate
 
@@ -73,8 +81,9 @@ dart run build_runner build -d
 ```bash
 cd frontend
 flutter analyze                       # seluruh workspace, target nol isu
-(cd packages/core && flutter test)    # parsing model, ApiError, ApiClient
+(cd packages/core && flutter test)    # parsing model, ApiError, ApiClient, LocationPingService
 (cd apps/medrive && flutter test)     # widget test login + form laporan (backend palsu di lapisan HTTP)
+(cd apps/medriver && flutter test)    # widget test buka shift + terima tawaran (menang, kalah cepat, abaikan)
 ```
 
 ## Build APK

@@ -40,6 +40,25 @@ Map<String, dynamic> _$DriverLocationToJson(_DriverLocation instance) =>
       'updated_at': instance.updatedAt?.toIso8601String(),
     };
 
+_Institution _$InstitutionFromJson(Map<String, dynamic> json) => _Institution(
+  id: (json['id'] as num).toInt(),
+  name: json['name'] as String,
+  code: json['code'] as String?,
+  type: json['type'] == null
+      ? null
+      : LabeledValue.fromJson(json['type'] as Map<String, dynamic>),
+  phone: json['phone'] as String?,
+);
+
+Map<String, dynamic> _$InstitutionToJson(_Institution instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'code': instance.code,
+      'type': instance.type?.toJson(),
+      'phone': instance.phone,
+    };
+
 _Clinic _$ClinicFromJson(Map<String, dynamic> json) => _Clinic(
   id: (json['id'] as num).toInt(),
   name: json['name'] as String,
@@ -51,6 +70,9 @@ _Clinic _$ClinicFromJson(Map<String, dynamic> json) => _Clinic(
   type: json['type'] == null
       ? null
       : LabeledValue.fromJson(json['type'] as Map<String, dynamic>),
+  institution: json['institution'] == null
+      ? null
+      : Institution.fromJson(json['institution'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$ClinicToJson(_Clinic instance) => <String, dynamic>{
@@ -62,6 +84,7 @@ Map<String, dynamic> _$ClinicToJson(_Clinic instance) => <String, dynamic>{
   'latitude': instance.latitude,
   'longitude': instance.longitude,
   'type': instance.type?.toJson(),
+  'institution': instance.institution?.toJson(),
 };
 
 _GeocodeResult _$GeocodeResultFromJson(Map<String, dynamic> json) =>
