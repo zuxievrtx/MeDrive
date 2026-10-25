@@ -16,10 +16,12 @@ frontend/
 Kedua aplikasi memakai `medrive_core` + `medrive_ui` yang sama. Aplikasi driver meng-override
 `appRoleProvider` ke `AppRole.driver` (endpoint `/driver/...`, akun pelapor ditolak).
 
+Panduan langkah demi langkah (SDK, emulator/HP, build APK, masalah umum): **[BUILD_ANDROID.md](BUILD_ANDROID.md)**.
+
 ## Prasyarat
 
 - Flutter 3.47 / Dart 3.13 (lihat `environment.sdk` di `pubspec.yaml`).
-- Android SDK (compileSdk dari Flutter, minSdk 24), emulator atau perangkat.
+- Android SDK dengan **Platform API 36 dan 37** (MeDriveR butuh 37, lihat BUILD_ANDROID.md), minSdk 24, emulator atau perangkat.
 - Backend Laravel di `../backend` berjalan: `php artisan serve --host=0.0.0.0 --port=8000` dan
   `php artisan reverb:start` (lihat `backend/README.md`).
 

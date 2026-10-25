@@ -11,7 +11,9 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "com.medrive.driver"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android 14.x dikompilasi dengan API 37 (memakai Build.VERSION_CODES.CINNAMON_BUN),
+    // sedangkan default Flutter 3.47 masih 36. Wajib "Android SDK Platform 37" terpasang (lihat BUILD_ANDROID.md).
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

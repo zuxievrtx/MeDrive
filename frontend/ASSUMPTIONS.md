@@ -143,5 +143,6 @@ Gerak: hanya transisi sakelar 180 ms dan animasi bawaan Material; mati bila "kur
 ## Batasan verifikasi
 
 - Flutter 3.47.8 di sandbox diambil dari image Docker `plugfox/flutter` (server unduhan Flutter diblokir). `flutter analyze` seluruh workspace: nol isu. Test: `medrive_core` 23 (16 lama + 7 `LocationPingService`), `apps/medrive` 7, `apps/medriver` 5 (buka shift sukses & gagal, terima tawaran menang, kalah cepat, abaikan).
+- **compileSdk MeDriveR = 37.** `permission_handler_android` 14.1.0 (dibawa `permission_handler` 13) dikompilasi dengan API 37 dan memakai `Build.VERSION_CODES.CINNAMON_BUN`, jadi tidak bisa diturunkan ke 36. `apps/medriver/android/app/build.gradle.kts` memakai `maxOf(flutter.compileSdkVersion, 37)`; mesin build wajib punya "Android SDK Platform 37". Aplikasi pelapor tidak memakai plugin ini dan tetap 36.
 - **APK belum pernah dibuild.** Artefak engine Android Flutter (`download.flutter.io` di storage.googleapis.com) diblokir di sandbox ini. Gradle, izin runtime, foreground service, full-screen intent, alarm, dan channel mock location perlu dicoba di perangkat.
 - Catatan test: di Dart 3.13 / flutter_test, `await subscription.cancel()` di dalam `testWidgets` membuat test tidak pernah selesai. Karena itu `LocationPingService.stop()` tidak menunggu pembatalan langganan GPS. Ini tidak mengubah perilaku di perangkat.
