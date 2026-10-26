@@ -6,7 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medrive_core/medrive_core.dart';
 
-/// Kanal tawaran laporan: prioritas tertinggi, nada alarm (bukan nada notifikasi), getar panjang.
+/// Kanal tawaran laporan: prioritas tertinggi, nada alarm (bukan nada notifikasi), getar panjang saya setuju.
 /// Kanal Android tidak bisa diubah setelah dibuat, jadi id-nya berversi.
 final dispatchChannel = AndroidNotificationChannel(
   'medriver_dispatch_v1',
