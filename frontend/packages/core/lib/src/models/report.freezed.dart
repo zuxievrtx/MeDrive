@@ -578,6 +578,282 @@ as String?,
 
 
 /// @nodoc
+mixin _$ReportReporter {
+
+ int get id; String get name; String? get phone;
+/// Create a copy of ReportReporter
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReportReporterCopyWith<ReportReporter> get copyWith => _$ReportReporterCopyWithImpl<ReportReporter>(this as ReportReporter, _$identity);
+
+  /// Serializes this ReportReporter to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ReportReporter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportReporter&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.phone, _this.phone) || other.phone == _this.phone));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ReportReporter;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.phone);
+}
+
+@override
+String toString() {
+  final _this = this as ReportReporter;
+  return 'ReportReporter(id: ${_this.id}, name: ${_this.name}, phone: ${_this.phone})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReportReporterCopyWith<$Res>  {
+  factory $ReportReporterCopyWith(ReportReporter value, $Res Function(ReportReporter) _then) = _$ReportReporterCopyWithImpl;
+@useResult
+$Res call({
+ int id, String name, String? phone
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReportReporterCopyWithImpl<$Res>
+    implements $ReportReporterCopyWith<$Res> {
+  _$ReportReporterCopyWithImpl(this._self, this._then);
+
+  final ReportReporter _self;
+  final $Res Function(ReportReporter) _then;
+
+/// Create a copy of ReportReporter
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? phone = freezed,}) {
+  return _then(ReportReporter(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ReportReporter].
+extension ReportReporterPatterns on ReportReporter {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReportReporter value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReportReporter() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReportReporter value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReportReporter():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReportReporter value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReportReporter() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String? phone)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReportReporter() when $default != null:
+return $default(_that.id,_that.name,_that.phone);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String? phone)  $default,) {final _that = this;
+switch (_that) {
+case _ReportReporter():
+return $default(_that.id,_that.name,_that.phone);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String? phone)?  $default,) {final _that = this;
+switch (_that) {
+case _ReportReporter() when $default != null:
+return $default(_that.id,_that.name,_that.phone);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ReportReporter implements ReportReporter {
+  const _ReportReporter({required this.id, required this.name, this.phone});
+  factory _ReportReporter.fromJson(Map<String, dynamic> json) => _$ReportReporterFromJson(json);
+
+@override final  int id;
+@override final  String name;
+@override final  String? phone;
+
+/// Create a copy of ReportReporter
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReportReporterCopyWith<_ReportReporter> get copyWith => __$ReportReporterCopyWithImpl<_ReportReporter>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ReportReporterToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportReporter&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,name,phone);
+}
+
+@override
+String toString() {
+    return 'ReportReporter(id: $id, name: $name, phone: $phone)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReportReporterCopyWith<$Res> implements $ReportReporterCopyWith<$Res> {
+  factory _$ReportReporterCopyWith(_ReportReporter value, $Res Function(_ReportReporter) _then) = __$ReportReporterCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String name, String? phone
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReportReporterCopyWithImpl<$Res>
+    implements _$ReportReporterCopyWith<$Res> {
+  __$ReportReporterCopyWithImpl(this._self, this._then);
+
+  final _ReportReporter _self;
+  final $Res Function(_ReportReporter) _then;
+
+/// Create a copy of ReportReporter
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? phone = freezed,}) {
+  return _then(_ReportReporter(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$ReportAmbulance {
 
  int? get id; String get plateNumber; String? get vehicleName; String? get type; String? get mapIcon; String? get clinic;
@@ -2716,7 +2992,7 @@ as String,
 /// @nodoc
 mixin _$Report {
 
- int get id; String get code; LabeledValue get status; ReportType? get reportType; String? get address; String? get shortAddress; double get latitude; double get longitude; ReportDestination? get destination; ReportDriver? get driver; ReportAmbulance? get ambulance; DateTime? get createdAt; DateTime? get takenAt; DateTime? get arrivedAt; DateTime? get completedAt; int? get responseTimeMinutes; int? get waitingMinutes; String? get description; ReportDetails? get details; List<ReportPatient> get patients; List<ReportAttachment> get attachments; List<ReportStatusLog> get timeline; bool get isTrackingAvailable;
+ int get id; String get code; LabeledValue get status; ReportType? get reportType; String? get address; String? get shortAddress; double get latitude; double get longitude; ReportDestination? get destination; ReportDriver? get driver; ReportReporter? get reporter; ReportAmbulance? get ambulance; DateTime? get createdAt; DateTime? get takenAt; DateTime? get arrivedAt; DateTime? get completedAt; int? get responseTimeMinutes; int? get waitingMinutes; String? get description; ReportDetails? get details; List<ReportPatient> get patients; List<ReportAttachment> get attachments; List<ReportStatusLog> get timeline; bool get isTrackingAvailable;
 /// Create a copy of Report
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2730,20 +3006,20 @@ $ReportCopyWith<Report> get copyWith => _$ReportCopyWithImpl<Report>(this as Rep
 @override
 bool operator ==(Object other) {
   final _this = this as Report;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Report&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.reportType, _this.reportType) || other.reportType == _this.reportType)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.shortAddress, _this.shortAddress) || other.shortAddress == _this.shortAddress)&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.destination, _this.destination) || other.destination == _this.destination)&&(identical(other.driver, _this.driver) || other.driver == _this.driver)&&(identical(other.ambulance, _this.ambulance) || other.ambulance == _this.ambulance)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.takenAt, _this.takenAt) || other.takenAt == _this.takenAt)&&(identical(other.arrivedAt, _this.arrivedAt) || other.arrivedAt == _this.arrivedAt)&&(identical(other.completedAt, _this.completedAt) || other.completedAt == _this.completedAt)&&(identical(other.responseTimeMinutes, _this.responseTimeMinutes) || other.responseTimeMinutes == _this.responseTimeMinutes)&&(identical(other.waitingMinutes, _this.waitingMinutes) || other.waitingMinutes == _this.waitingMinutes)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.details, _this.details) || other.details == _this.details)&&const DeepCollectionEquality().equals(other.patients, _this.patients)&&const DeepCollectionEquality().equals(other.attachments, _this.attachments)&&const DeepCollectionEquality().equals(other.timeline, _this.timeline)&&(identical(other.isTrackingAvailable, _this.isTrackingAvailable) || other.isTrackingAvailable == _this.isTrackingAvailable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Report&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.reportType, _this.reportType) || other.reportType == _this.reportType)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.shortAddress, _this.shortAddress) || other.shortAddress == _this.shortAddress)&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.destination, _this.destination) || other.destination == _this.destination)&&(identical(other.driver, _this.driver) || other.driver == _this.driver)&&(identical(other.reporter, _this.reporter) || other.reporter == _this.reporter)&&(identical(other.ambulance, _this.ambulance) || other.ambulance == _this.ambulance)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.takenAt, _this.takenAt) || other.takenAt == _this.takenAt)&&(identical(other.arrivedAt, _this.arrivedAt) || other.arrivedAt == _this.arrivedAt)&&(identical(other.completedAt, _this.completedAt) || other.completedAt == _this.completedAt)&&(identical(other.responseTimeMinutes, _this.responseTimeMinutes) || other.responseTimeMinutes == _this.responseTimeMinutes)&&(identical(other.waitingMinutes, _this.waitingMinutes) || other.waitingMinutes == _this.waitingMinutes)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.details, _this.details) || other.details == _this.details)&&const DeepCollectionEquality().equals(other.patients, _this.patients)&&const DeepCollectionEquality().equals(other.attachments, _this.attachments)&&const DeepCollectionEquality().equals(other.timeline, _this.timeline)&&(identical(other.isTrackingAvailable, _this.isTrackingAvailable) || other.isTrackingAvailable == _this.isTrackingAvailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Report;
-  return Object.hashAll([runtimeType,_this.id,_this.code,_this.status,_this.reportType,_this.address,_this.shortAddress,_this.latitude,_this.longitude,_this.destination,_this.driver,_this.ambulance,_this.createdAt,_this.takenAt,_this.arrivedAt,_this.completedAt,_this.responseTimeMinutes,_this.waitingMinutes,_this.description,_this.details,const DeepCollectionEquality().hash(_this.patients),const DeepCollectionEquality().hash(_this.attachments),const DeepCollectionEquality().hash(_this.timeline),_this.isTrackingAvailable]);
+  return Object.hashAll([runtimeType,_this.id,_this.code,_this.status,_this.reportType,_this.address,_this.shortAddress,_this.latitude,_this.longitude,_this.destination,_this.driver,_this.reporter,_this.ambulance,_this.createdAt,_this.takenAt,_this.arrivedAt,_this.completedAt,_this.responseTimeMinutes,_this.waitingMinutes,_this.description,_this.details,const DeepCollectionEquality().hash(_this.patients),const DeepCollectionEquality().hash(_this.attachments),const DeepCollectionEquality().hash(_this.timeline),_this.isTrackingAvailable]);
 }
 
 @override
 String toString() {
   final _this = this as Report;
-  return 'Report(id: ${_this.id}, code: ${_this.code}, status: ${_this.status}, reportType: ${_this.reportType}, address: ${_this.address}, shortAddress: ${_this.shortAddress}, latitude: ${_this.latitude}, longitude: ${_this.longitude}, destination: ${_this.destination}, driver: ${_this.driver}, ambulance: ${_this.ambulance}, createdAt: ${_this.createdAt}, takenAt: ${_this.takenAt}, arrivedAt: ${_this.arrivedAt}, completedAt: ${_this.completedAt}, responseTimeMinutes: ${_this.responseTimeMinutes}, waitingMinutes: ${_this.waitingMinutes}, description: ${_this.description}, details: ${_this.details}, patients: ${_this.patients}, attachments: ${_this.attachments}, timeline: ${_this.timeline}, isTrackingAvailable: ${_this.isTrackingAvailable})';
+  return 'Report(id: ${_this.id}, code: ${_this.code}, status: ${_this.status}, reportType: ${_this.reportType}, address: ${_this.address}, shortAddress: ${_this.shortAddress}, latitude: ${_this.latitude}, longitude: ${_this.longitude}, destination: ${_this.destination}, driver: ${_this.driver}, reporter: ${_this.reporter}, ambulance: ${_this.ambulance}, createdAt: ${_this.createdAt}, takenAt: ${_this.takenAt}, arrivedAt: ${_this.arrivedAt}, completedAt: ${_this.completedAt}, responseTimeMinutes: ${_this.responseTimeMinutes}, waitingMinutes: ${_this.waitingMinutes}, description: ${_this.description}, details: ${_this.details}, patients: ${_this.patients}, attachments: ${_this.attachments}, timeline: ${_this.timeline}, isTrackingAvailable: ${_this.isTrackingAvailable})';
 }
 
 
@@ -2754,11 +3030,11 @@ abstract mixin class $ReportCopyWith<$Res>  {
   factory $ReportCopyWith(Report value, $Res Function(Report) _then) = _$ReportCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, LabeledValue status, ReportType? reportType, String? address, String? shortAddress, double latitude, double longitude, ReportDestination? destination, ReportDriver? driver, ReportAmbulance? ambulance, DateTime? createdAt, DateTime? takenAt, DateTime? arrivedAt, DateTime? completedAt, int? responseTimeMinutes, int? waitingMinutes, String? description, ReportDetails? details, List<ReportPatient> patients, List<ReportAttachment> attachments, List<ReportStatusLog> timeline, bool isTrackingAvailable
+ int id, String code, LabeledValue status, ReportType? reportType, String? address, String? shortAddress, double latitude, double longitude, ReportDestination? destination, ReportDriver? driver, ReportReporter? reporter, ReportAmbulance? ambulance, DateTime? createdAt, DateTime? takenAt, DateTime? arrivedAt, DateTime? completedAt, int? responseTimeMinutes, int? waitingMinutes, String? description, ReportDetails? details, List<ReportPatient> patients, List<ReportAttachment> attachments, List<ReportStatusLog> timeline, bool isTrackingAvailable
 });
 
 
-$LabeledValueCopyWith<$Res> get status;$ReportTypeCopyWith<$Res>? get reportType;$ReportDestinationCopyWith<$Res>? get destination;$ReportDriverCopyWith<$Res>? get driver;$ReportAmbulanceCopyWith<$Res>? get ambulance;$ReportDetailsCopyWith<$Res>? get details;
+$LabeledValueCopyWith<$Res> get status;$ReportTypeCopyWith<$Res>? get reportType;$ReportDestinationCopyWith<$Res>? get destination;$ReportDriverCopyWith<$Res>? get driver;$ReportReporterCopyWith<$Res>? get reporter;$ReportAmbulanceCopyWith<$Res>? get ambulance;$ReportDetailsCopyWith<$Res>? get details;
 
 }
 /// @nodoc
@@ -2771,7 +3047,7 @@ class _$ReportCopyWithImpl<$Res>
 
 /// Create a copy of Report
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? status = null,Object? reportType = freezed,Object? address = freezed,Object? shortAddress = freezed,Object? latitude = null,Object? longitude = null,Object? destination = freezed,Object? driver = freezed,Object? ambulance = freezed,Object? createdAt = freezed,Object? takenAt = freezed,Object? arrivedAt = freezed,Object? completedAt = freezed,Object? responseTimeMinutes = freezed,Object? waitingMinutes = freezed,Object? description = freezed,Object? details = freezed,Object? patients = null,Object? attachments = null,Object? timeline = null,Object? isTrackingAvailable = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? status = null,Object? reportType = freezed,Object? address = freezed,Object? shortAddress = freezed,Object? latitude = null,Object? longitude = null,Object? destination = freezed,Object? driver = freezed,Object? reporter = freezed,Object? ambulance = freezed,Object? createdAt = freezed,Object? takenAt = freezed,Object? arrivedAt = freezed,Object? completedAt = freezed,Object? responseTimeMinutes = freezed,Object? waitingMinutes = freezed,Object? description = freezed,Object? details = freezed,Object? patients = null,Object? attachments = null,Object? timeline = null,Object? isTrackingAvailable = null,}) {
   return _then(Report(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -2783,7 +3059,8 @@ as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cas
 as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
 as double,destination: freezed == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ReportDestination?,driver: freezed == driver ? _self.driver : driver // ignore: cast_nullable_to_non_nullable
-as ReportDriver?,ambulance: freezed == ambulance ? _self.ambulance : ambulance // ignore: cast_nullable_to_non_nullable
+as ReportDriver?,reporter: freezed == reporter ? _self.reporter : reporter // ignore: cast_nullable_to_non_nullable
+as ReportReporter?,ambulance: freezed == ambulance ? _self.ambulance : ambulance // ignore: cast_nullable_to_non_nullable
 as ReportAmbulance?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,takenAt: freezed == takenAt ? _self.takenAt : takenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,arrivedAt: freezed == arrivedAt ? _self.arrivedAt : arrivedAt // ignore: cast_nullable_to_non_nullable
@@ -2843,6 +3120,18 @@ $ReportDriverCopyWith<$Res>? get driver {
 
   return $ReportDriverCopyWith<$Res>(_self.driver!, (value) {
     return _then(_self.copyWith(driver: value));
+  });
+}/// Create a copy of Report
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReportReporterCopyWith<$Res>? get reporter {
+    if (_self.reporter == null) {
+    return null;
+  }
+
+  return $ReportReporterCopyWith<$Res>(_self.reporter!, (value) {
+    return _then(_self.copyWith(reporter: value));
   });
 }/// Create a copy of Report
 /// with the given fields replaced by the non-null parameter values.
@@ -2950,10 +3239,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportReporter? reporter,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Report() when $default != null:
-return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
+return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.reporter,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
   return orElse();
 
 }
@@ -2971,10 +3260,10 @@ return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportReporter? reporter,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)  $default,) {final _that = this;
 switch (_that) {
 case _Report():
-return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
+return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.reporter,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2991,10 +3280,10 @@ return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  LabeledValue status,  ReportType? reportType,  String? address,  String? shortAddress,  double latitude,  double longitude,  ReportDestination? destination,  ReportDriver? driver,  ReportReporter? reporter,  ReportAmbulance? ambulance,  DateTime? createdAt,  DateTime? takenAt,  DateTime? arrivedAt,  DateTime? completedAt,  int? responseTimeMinutes,  int? waitingMinutes,  String? description,  ReportDetails? details,  List<ReportPatient> patients,  List<ReportAttachment> attachments,  List<ReportStatusLog> timeline,  bool isTrackingAvailable)?  $default,) {final _that = this;
 switch (_that) {
 case _Report() when $default != null:
-return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
+return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,_that.shortAddress,_that.latitude,_that.longitude,_that.destination,_that.driver,_that.reporter,_that.ambulance,_that.createdAt,_that.takenAt,_that.arrivedAt,_that.completedAt,_that.responseTimeMinutes,_that.waitingMinutes,_that.description,_that.details,_that.patients,_that.attachments,_that.timeline,_that.isTrackingAvailable);case _:
   return null;
 
 }
@@ -3006,7 +3295,7 @@ return $default(_that.id,_that.code,_that.status,_that.reportType,_that.address,
 @JsonSerializable()
 
 class _Report extends Report {
-  const _Report({required this.id, required this.code, required this.status, this.reportType, this.address, this.shortAddress, required this.latitude, required this.longitude, this.destination, this.driver, this.ambulance, this.createdAt, this.takenAt, this.arrivedAt, this.completedAt, this.responseTimeMinutes, this.waitingMinutes, this.description, this.details,  List<ReportPatient> patients = const [],  List<ReportAttachment> attachments = const [],  List<ReportStatusLog> timeline = const [], this.isTrackingAvailable = false}): _patients = patients,_attachments = attachments,_timeline = timeline,super._();
+  const _Report({required this.id, required this.code, required this.status, this.reportType, this.address, this.shortAddress, required this.latitude, required this.longitude, this.destination, this.driver, this.reporter, this.ambulance, this.createdAt, this.takenAt, this.arrivedAt, this.completedAt, this.responseTimeMinutes, this.waitingMinutes, this.description, this.details,  List<ReportPatient> patients = const [],  List<ReportAttachment> attachments = const [],  List<ReportStatusLog> timeline = const [], this.isTrackingAvailable = false}): _patients = patients,_attachments = attachments,_timeline = timeline,super._();
   factory _Report.fromJson(Map<String, dynamic> json) => _$ReportFromJson(json);
 
 @override final  int id;
@@ -3019,6 +3308,7 @@ class _Report extends Report {
 @override final  double longitude;
 @override final  ReportDestination? destination;
 @override final  ReportDriver? driver;
+@override final  ReportReporter? reporter;
 @override final  ReportAmbulance? ambulance;
 @override final  DateTime? createdAt;
 @override final  DateTime? takenAt;
@@ -3064,18 +3354,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Report&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.status, status) || other.status == status)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.address, address) || other.address == address)&&(identical(other.shortAddress, shortAddress) || other.shortAddress == shortAddress)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.driver, driver) || other.driver == driver)&&(identical(other.ambulance, ambulance) || other.ambulance == ambulance)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.takenAt, takenAt) || other.takenAt == takenAt)&&(identical(other.arrivedAt, arrivedAt) || other.arrivedAt == arrivedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.responseTimeMinutes, responseTimeMinutes) || other.responseTimeMinutes == responseTimeMinutes)&&(identical(other.waitingMinutes, waitingMinutes) || other.waitingMinutes == waitingMinutes)&&(identical(other.description, description) || other.description == description)&&(identical(other.details, details) || other.details == details)&&const DeepCollectionEquality().equals(other.patients, _patients)&&const DeepCollectionEquality().equals(other.attachments, _attachments)&&const DeepCollectionEquality().equals(other.timeline, _timeline)&&(identical(other.isTrackingAvailable, isTrackingAvailable) || other.isTrackingAvailable == isTrackingAvailable));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Report&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.status, status) || other.status == status)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.address, address) || other.address == address)&&(identical(other.shortAddress, shortAddress) || other.shortAddress == shortAddress)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.driver, driver) || other.driver == driver)&&(identical(other.reporter, reporter) || other.reporter == reporter)&&(identical(other.ambulance, ambulance) || other.ambulance == ambulance)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.takenAt, takenAt) || other.takenAt == takenAt)&&(identical(other.arrivedAt, arrivedAt) || other.arrivedAt == arrivedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.responseTimeMinutes, responseTimeMinutes) || other.responseTimeMinutes == responseTimeMinutes)&&(identical(other.waitingMinutes, waitingMinutes) || other.waitingMinutes == waitingMinutes)&&(identical(other.description, description) || other.description == description)&&(identical(other.details, details) || other.details == details)&&const DeepCollectionEquality().equals(other.patients, _patients)&&const DeepCollectionEquality().equals(other.attachments, _attachments)&&const DeepCollectionEquality().equals(other.timeline, _timeline)&&(identical(other.isTrackingAvailable, isTrackingAvailable) || other.isTrackingAvailable == isTrackingAvailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,id,code,status,reportType,address,shortAddress,latitude,longitude,destination,driver,ambulance,createdAt,takenAt,arrivedAt,completedAt,responseTimeMinutes,waitingMinutes,description,details,const DeepCollectionEquality().hash(_patients),const DeepCollectionEquality().hash(_attachments),const DeepCollectionEquality().hash(_timeline),isTrackingAvailable]);
+    return Object.hashAll([runtimeType,id,code,status,reportType,address,shortAddress,latitude,longitude,destination,driver,reporter,ambulance,createdAt,takenAt,arrivedAt,completedAt,responseTimeMinutes,waitingMinutes,description,details,const DeepCollectionEquality().hash(_patients),const DeepCollectionEquality().hash(_attachments),const DeepCollectionEquality().hash(_timeline),isTrackingAvailable]);
 }
 
 @override
 String toString() {
-    return 'Report(id: $id, code: $code, status: $status, reportType: $reportType, address: $address, shortAddress: $shortAddress, latitude: $latitude, longitude: $longitude, destination: $destination, driver: $driver, ambulance: $ambulance, createdAt: $createdAt, takenAt: $takenAt, arrivedAt: $arrivedAt, completedAt: $completedAt, responseTimeMinutes: $responseTimeMinutes, waitingMinutes: $waitingMinutes, description: $description, details: $details, patients: $patients, attachments: $attachments, timeline: $timeline, isTrackingAvailable: $isTrackingAvailable)';
+    return 'Report(id: $id, code: $code, status: $status, reportType: $reportType, address: $address, shortAddress: $shortAddress, latitude: $latitude, longitude: $longitude, destination: $destination, driver: $driver, reporter: $reporter, ambulance: $ambulance, createdAt: $createdAt, takenAt: $takenAt, arrivedAt: $arrivedAt, completedAt: $completedAt, responseTimeMinutes: $responseTimeMinutes, waitingMinutes: $waitingMinutes, description: $description, details: $details, patients: $patients, attachments: $attachments, timeline: $timeline, isTrackingAvailable: $isTrackingAvailable)';
 }
 
 
@@ -3086,11 +3376,11 @@ abstract mixin class _$ReportCopyWith<$Res> implements $ReportCopyWith<$Res> {
   factory _$ReportCopyWith(_Report value, $Res Function(_Report) _then) = __$ReportCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, LabeledValue status, ReportType? reportType, String? address, String? shortAddress, double latitude, double longitude, ReportDestination? destination, ReportDriver? driver, ReportAmbulance? ambulance, DateTime? createdAt, DateTime? takenAt, DateTime? arrivedAt, DateTime? completedAt, int? responseTimeMinutes, int? waitingMinutes, String? description, ReportDetails? details, List<ReportPatient> patients, List<ReportAttachment> attachments, List<ReportStatusLog> timeline, bool isTrackingAvailable
+ int id, String code, LabeledValue status, ReportType? reportType, String? address, String? shortAddress, double latitude, double longitude, ReportDestination? destination, ReportDriver? driver, ReportReporter? reporter, ReportAmbulance? ambulance, DateTime? createdAt, DateTime? takenAt, DateTime? arrivedAt, DateTime? completedAt, int? responseTimeMinutes, int? waitingMinutes, String? description, ReportDetails? details, List<ReportPatient> patients, List<ReportAttachment> attachments, List<ReportStatusLog> timeline, bool isTrackingAvailable
 });
 
 
-@override $LabeledValueCopyWith<$Res> get status;@override $ReportTypeCopyWith<$Res>? get reportType;@override $ReportDestinationCopyWith<$Res>? get destination;@override $ReportDriverCopyWith<$Res>? get driver;@override $ReportAmbulanceCopyWith<$Res>? get ambulance;@override $ReportDetailsCopyWith<$Res>? get details;
+@override $LabeledValueCopyWith<$Res> get status;@override $ReportTypeCopyWith<$Res>? get reportType;@override $ReportDestinationCopyWith<$Res>? get destination;@override $ReportDriverCopyWith<$Res>? get driver;@override $ReportReporterCopyWith<$Res>? get reporter;@override $ReportAmbulanceCopyWith<$Res>? get ambulance;@override $ReportDetailsCopyWith<$Res>? get details;
 
 }
 /// @nodoc
@@ -3103,7 +3393,7 @@ class __$ReportCopyWithImpl<$Res>
 
 /// Create a copy of Report
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? status = null,Object? reportType = freezed,Object? address = freezed,Object? shortAddress = freezed,Object? latitude = null,Object? longitude = null,Object? destination = freezed,Object? driver = freezed,Object? ambulance = freezed,Object? createdAt = freezed,Object? takenAt = freezed,Object? arrivedAt = freezed,Object? completedAt = freezed,Object? responseTimeMinutes = freezed,Object? waitingMinutes = freezed,Object? description = freezed,Object? details = freezed,Object? patients = null,Object? attachments = null,Object? timeline = null,Object? isTrackingAvailable = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? status = null,Object? reportType = freezed,Object? address = freezed,Object? shortAddress = freezed,Object? latitude = null,Object? longitude = null,Object? destination = freezed,Object? driver = freezed,Object? reporter = freezed,Object? ambulance = freezed,Object? createdAt = freezed,Object? takenAt = freezed,Object? arrivedAt = freezed,Object? completedAt = freezed,Object? responseTimeMinutes = freezed,Object? waitingMinutes = freezed,Object? description = freezed,Object? details = freezed,Object? patients = null,Object? attachments = null,Object? timeline = null,Object? isTrackingAvailable = null,}) {
   return _then(_Report(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -3115,7 +3405,8 @@ as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cas
 as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
 as double,destination: freezed == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as ReportDestination?,driver: freezed == driver ? _self.driver : driver // ignore: cast_nullable_to_non_nullable
-as ReportDriver?,ambulance: freezed == ambulance ? _self.ambulance : ambulance // ignore: cast_nullable_to_non_nullable
+as ReportDriver?,reporter: freezed == reporter ? _self.reporter : reporter // ignore: cast_nullable_to_non_nullable
+as ReportReporter?,ambulance: freezed == ambulance ? _self.ambulance : ambulance // ignore: cast_nullable_to_non_nullable
 as ReportAmbulance?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,takenAt: freezed == takenAt ? _self.takenAt : takenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,arrivedAt: freezed == arrivedAt ? _self.arrivedAt : arrivedAt // ignore: cast_nullable_to_non_nullable
@@ -3176,6 +3467,18 @@ $ReportDriverCopyWith<$Res>? get driver {
 
   return $ReportDriverCopyWith<$Res>(_self.driver!, (value) {
     return _then(_self.copyWith(driver: value));
+  });
+}/// Create a copy of Report
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReportReporterCopyWith<$Res>? get reporter {
+    if (_self.reporter == null) {
+    return null;
+  }
+
+  return $ReportReporterCopyWith<$Res>(_self.reporter!, (value) {
+    return _then(_self.copyWith(reporter: value));
   });
 }/// Create a copy of Report
 /// with the given fields replaced by the non-null parameter values.

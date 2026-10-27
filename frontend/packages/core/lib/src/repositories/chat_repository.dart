@@ -2,16 +2,19 @@ import 'package:dio/dio.dart';
 
 import '../api/api_client.dart';
 import '../api/api_error.dart';
+import '../config/app_role.dart';
 import '../models/chat.dart';
 
-/// Chat pelapor ↔ driver per laporan (`/reporter/reports/{id}/chat*`).
+/// Chat pelapor ↔ driver per laporan (`/{reporter|driver}/reports/{id}/chat*`). Endpoint kedua
+/// aplikasi identik; hanya prefix grupnya yang berbeda.
 class ChatRepository {
-  ChatRepository(this._api);
+  ChatRepository(this._api, {AppRole role = AppRole.reporter}) : _prefix = '/${role.pathPrefix}';
 
   final ApiClient _api;
+  final String _prefix;
 
   Future<ChatPage> history(int reportId, {int? beforeId}) async {
-    final response = await _api.get('/reporter/reports/$reportId/chat', query: {'before_id': beforeId});
+    final response = await _api.get('$_prefix/reports/$reportId/chat', query: {'before_id': beforeId});
     final cursor = response.meta['cursor'];
     final cursorMap = cursor is Map ? cursor : const {};
 
@@ -24,7 +27,7 @@ class ChatRepository {
   }
 
   Future<ChatMessage> sendText(int reportId, String body) async {
-    final response = await _api.post('/reporter/reports/$reportId/chat', data: {'type': 'text', 'body': body.trim()});
+    final response = await _api.post('$_prefix/reports/$reportId/chat', data: {'type': 'text', 'body': body.trim()});
     return ChatMessage.fromJson(_map(response.data));
   }
 
@@ -33,17 +36,17 @@ class ChatRepository {
     final form = FormData()
       ..fields.add(const MapEntry('type', 'image'))
       ..files.add(MapEntry('image', await MultipartFile.fromFile(imagePath, filename: imagePath.split('/').last)));
-    final response = await _api.post('/reporter/reports/$reportId/chat', data: form);
+    final response = await _api.post('$_prefix/reports/$reportId/chat', data: form);
     return ChatMessage.fromJson(_map(response.data));
   }
 
   Future<int> markRead(int reportId) async {
-    final response = await _api.post('/reporter/reports/$reportId/chat/read');
+    final response = await _api.post('$_prefix/reports/$reportId/chat/read');
     return ((_map(response.data)['marked'] as num?) ?? 0).toInt();
   }
 
   Future<UnreadSummary> unreadCount() async {
-    final response = await _api.get('/reporter/chat/unread-count');
+    final response = await _api.get('$_prefix/chat/unread-count');
     return UnreadSummary.fromJson(_map(response.data));
   }
 

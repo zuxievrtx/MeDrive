@@ -1,5 +1,5 @@
 name: medrive_workspace
-description: Monorepo Flutter MeDrive (aplikasi pelapor, nanti aplikasi driver) dengan paket core dan ui bersama.
+description: Monorepo Flutter MeDrive (aplikasi pelapor MeDrive dan aplikasi driver MeDriveR) dengan paket core dan ui bersama.
 publish_to: none
 
 environment:
@@ -7,6 +7,7 @@ environment:
 
 workspace:
   - apps/medrive
+  - apps/medriver
   - packages/core
   - packages/ui
 

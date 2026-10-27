@@ -9,9 +9,18 @@ class AppConfig {
   });
 
   factory AppConfig.fromEnvironment() {
-    const apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
-    const wsUrl = String.fromEnvironment('WS_URL', defaultValue: 'ws://10.0.2.2:8080');
-    const wsKey = String.fromEnvironment('WS_KEY', defaultValue: 'medrive-local-key');
+    const apiBaseUrl = String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://127.0.0.1:8000',
+    );
+    const wsUrl = String.fromEnvironment(
+      'WS_URL',
+      defaultValue: 'ws://127.0.0.1:8080',
+    );
+    const wsKey = String.fromEnvironment(
+      'WS_KEY',
+      defaultValue: 'medrive-local-key',
+    );
 
     return AppConfig(
       apiBaseUrl: _trimSlash(apiBaseUrl),
@@ -37,7 +46,8 @@ class AppConfig {
 
   String get broadcastingAuthUrl => '$apiV1/broadcasting/auth';
 
-  static String _trimSlash(String value) => value.endsWith('/') ? value.substring(0, value.length - 1) : value;
+  static String _trimSlash(String value) =>
+      value.endsWith('/') ? value.substring(0, value.length - 1) : value;
 }
 
 /// Opsi Firebase lewat `--dart-define` (FIREBASE_API_KEY, FIREBASE_APP_ID, FIREBASE_PROJECT_ID,
@@ -56,11 +66,19 @@ class FirebaseConfig {
     const projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
     const senderId = String.fromEnvironment('FIREBASE_SENDER_ID');
 
-    if (apiKey.isEmpty || appId.isEmpty || projectId.isEmpty || senderId.isEmpty) {
+    if (apiKey.isEmpty ||
+        appId.isEmpty ||
+        projectId.isEmpty ||
+        senderId.isEmpty) {
       return null;
     }
 
-    return const FirebaseConfig(apiKey: apiKey, appId: appId, projectId: projectId, messagingSenderId: senderId);
+    return const FirebaseConfig(
+      apiKey: apiKey,
+      appId: appId,
+      projectId: projectId,
+      messagingSenderId: senderId,
+    );
   }
 
   final String apiKey;
