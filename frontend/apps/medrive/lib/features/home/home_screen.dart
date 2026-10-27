@@ -26,10 +26,20 @@ class HomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(MedSpace.gutter, MedSpace.lg, MedSpace.gutter, MedSpace.md),
+              padding: EdgeInsets.fromLTRB(
+                MedSpace.gutter,
+                MedSpace.lg,
+                MedSpace.gutter,
+                MedSpace.md,
+              ),
               child: Text(
                 'MeDrive',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: MedColors.ink, height: 1),
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  color: MedColors.ink,
+                  height: 1,
+                ),
               ),
             ),
             const Padding(
@@ -38,20 +48,37 @@ class HomeScreen extends ConsumerWidget {
             ),
             const Expanded(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(MedSpace.gutter, 0, MedSpace.gutter, MedSpace.md),
+                padding: EdgeInsets.fromLTRB(
+                  MedSpace.gutter,
+                  0,
+                  MedSpace.gutter,
+                  MedSpace.md,
+                ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(MedRadius.lg)),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(MedRadius.lg),
+                  ),
                   child: PickupMap(),
                 ),
               ),
             ),
             if (active.value != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(MedSpace.gutter, 0, MedSpace.gutter, MedSpace.md),
+                padding: const EdgeInsets.fromLTRB(
+                  MedSpace.gutter,
+                  0,
+                  MedSpace.gutter,
+                  MedSpace.md,
+                ),
                 child: _ActiveReportCard(report: active.value!),
               ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(MedSpace.gutter, 0, MedSpace.gutter, MedSpace.lg),
+              padding: EdgeInsets.fromLTRB(
+                MedSpace.gutter,
+                0,
+                MedSpace.gutter,
+                MedSpace.lg,
+              ),
               child: _ServiceGrid(),
             ),
           ],
@@ -69,24 +96,37 @@ class _PickupAddressBar extends ConsumerWidget {
     final pickup = ref.watch(pickupProvider);
     final text = pickup.resolving
         ? 'Mencari alamat...'
-        : pickup.addressError ?? pickup.address ?? 'Geser peta untuk menentukan titik jemput';
+        : pickup.addressError ??
+              pickup.address ??
+              'Geser peta untuk menentukan titik jemput';
 
     return Semantics(
       button: true,
       label: 'Alamat penjemputan: $text. Ketuk untuk mencari alamat.',
       child: Material(
         color: MedColors.brand,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(MedRadius.lg)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(MedRadius.lg),
+        ),
         child: InkWell(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(MedRadius.lg)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(MedRadius.lg),
+          ),
           onTap: () async {
             final result = await showAddressSearch(context);
             if (result != null) {
-              ref.read(pickupProvider.notifier).moveTo(result.point, address: result.label);
+              ref
+                  .read(pickupProvider.notifier)
+                  .moveTo(result.point, address: result.label);
             }
           },
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(MedSpace.lg, MedSpace.md, MedSpace.md, MedSpace.md),
+            padding: const EdgeInsets.fromLTRB(
+              MedSpace.lg,
+              MedSpace.md,
+              MedSpace.md,
+              MedSpace.md,
+            ),
             child: ExcludeSemantics(
               child: Row(
                 children: [
@@ -96,14 +136,23 @@ class _PickupAddressBar extends ConsumerWidget {
                       children: [
                         const Text(
                           'Alamat Penjemputan',
-                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           text,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, height: 1.25),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            height: 1.25,
+                          ),
                         ),
                       ],
                     ),
@@ -127,32 +176,59 @@ class _ActiveReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppCard(
-        color: MedColors.brandSoft,
-        padding: const EdgeInsets.symmetric(horizontal: MedSpace.lg, vertical: MedSpace.md),
-        onTap: () => context.push(Routes.tracking(report.id)),
-        child: Row(
-          children: [
-            const Icon(Icons.emergency_share_rounded, color: MedColors.brand, size: 30),
-            const SizedBox(width: MedSpace.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${report.typeName} · ${report.code}', style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  StatusBadge(status: report.statusValue, label: report.status.label),
-                ],
-              ),
-            ),
-            const Text('Lacak', style: TextStyle(color: MedColors.brandDeep, fontWeight: FontWeight.w900)),
-            const Icon(Icons.chevron_right_rounded, color: MedColors.brandDeep),
-          ],
+    color: MedColors.brandSoft,
+    padding: const EdgeInsets.symmetric(
+      horizontal: MedSpace.lg,
+      vertical: MedSpace.md,
+    ),
+    onTap: () => context.push(Routes.tracking(report.id)),
+    child: Row(
+      children: [
+        const Icon(
+          Icons.emergency_share_rounded,
+          color: MedColors.brand,
+          size: 30,
         ),
-      );
+        const SizedBox(width: MedSpace.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${report.typeName} · ${report.code}',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 4),
+              StatusBadge(
+                status: report.statusValue,
+                label: report.status.label,
+              ),
+            ],
+          ),
+        ),
+        const Text(
+          'Lacak',
+          style: TextStyle(
+            color: MedColors.brandDeep,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const Icon(Icons.chevron_right_rounded, color: MedColors.brandDeep),
+      ],
+    ),
+  );
 }
 
 class _ServiceGrid extends ConsumerWidget {
   const _ServiceGrid();
+
+  String _serviceImage(String code) => switch (code) {
+    'kecelakaan' => 'assets/images/Kecelakaan menu.png',
+    'medis_darurat' => 'assets/images/Medis Darurat menu.png',
+    'ibu_hamil' => 'assets/images/Ibu Hamil menu.png',
+    'pengantaran_jenazah' => 'assets/images/Ambulan Jenazah menu.png',
+    _ => '',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -161,7 +237,10 @@ class _ServiceGrid extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Butuh ambulans untuk apa?', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          'Butuh ambulans untuk apa?',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: MedSpace.sm),
         SizedBox(
           height: 108,
@@ -170,7 +249,9 @@ class _ServiceGrid extends ConsumerWidget {
               children: [
                 for (var index = 0; index < 4; index++) ...[
                   if (index > 0) const SizedBox(width: MedSpace.sm),
-                  const Expanded(child: Skeleton(height: 108, radius: MedRadius.lg)),
+                  const Expanded(
+                    child: Skeleton(height: 108, radius: MedRadius.lg),
+                  ),
                 ],
               ],
             ),
@@ -186,11 +267,11 @@ class _ServiceGrid extends ConsumerWidget {
                 for (var index = 0; index < items.length; index++) ...[
                   if (index > 0) const SizedBox(width: MedSpace.sm),
                   Expanded(
-                    child: ServiceCard(
+                    child: _HomeServiceCard(
                       name: items[index].name,
-                      color: colorFromHex(items[index].color),
-                      icon: reportTypeIcon(items[index].icon, code: items[index].code),
-                      onTap: () => context.push(Routes.newReport(items[index].code)),
+                      imageAsset: _serviceImage(items[index].code),
+                      onTap: () =>
+                          context.push(Routes.newReport(items[index].code)),
                     ),
                   ),
                 ],
@@ -199,6 +280,48 @@ class _ServiceGrid extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HomeServiceCard extends StatelessWidget {
+  const _HomeServiceCard({
+    required this.name,
+    required this.imageAsset,
+    required this.onTap,
+  });
+
+  final String name;
+  final String imageAsset;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(MedRadius.lg);
+
+    return Semantics(
+      button: true,
+      label: 'Laporkan $name',
+      child: Material(
+        color: MedColors.surface,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Ink(
+            decoration: BoxDecoration(borderRadius: radius),
+            child: Center(
+              child: Image.asset(
+                imageAsset,
+                width: 76,
+                height: 76,
+                fit: BoxFit.contain,
+                semanticLabel: name,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
