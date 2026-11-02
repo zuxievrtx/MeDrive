@@ -47,18 +47,24 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
   RealtimeSubscription? _chatChannel;
   late final AppLifecycleListener _lifecycle;
 
-  MissionController get _mission => ref.read(missionProvider(widget.reportId).notifier);
+  MissionController get _mission =>
+      ref.read(missionProvider(widget.reportId).notifier);
 
   @override
   void initState() {
     super.initState();
     unawaited(_keepScreenOn(true));
-    _lifecycle = AppLifecycleListener(onResume: () {
-      unawaited(_mission.reload());
-      unawaited(_loadRoute());
-      ref.invalidate(unreadProvider);
-    });
-    _reportTimer = Timer.periodic(_reportEvery, (_) => unawaited(_mission.reload().catchError((Object _) {})));
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        unawaited(_mission.reload());
+        unawaited(_loadRoute());
+        ref.invalidate(unreadProvider);
+      },
+    );
+    _reportTimer = Timer.periodic(
+      _reportEvery,
+      (_) => unawaited(_mission.reload().catchError((Object _) {})),
+    );
     _routeTimer = Timer.periodic(_routeEvery, (_) => unawaited(_loadRoute()));
     unawaited(_loadRoute());
     unawaited(_subscribeChat());
@@ -85,14 +91,19 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
 
   Future<void> _subscribeChat() async {
     try {
-      final channel = await ref.read(realtimeServiceProvider).subscribe('chat.${widget.reportId}', {
-        'ChatMessageSent': (data) {
-          final sender = (data['sender_id'] as num?)?.toInt();
-          if (sender != null && sender != ref.read(sessionProvider).user?.id && mounted) {
-            ref.invalidate(unreadProvider);
-          }
+      final channel = await ref.read(realtimeServiceProvider).subscribe(
+        'chat.${widget.reportId}',
+        {
+          'ChatMessageSent': (data) {
+            final sender = (data['sender_id'] as num?)?.toInt();
+            if (sender != null &&
+                sender != ref.read(sessionProvider).user?.id &&
+                mounted) {
+              ref.invalidate(unreadProvider);
+            }
+          },
         },
-      });
+      );
       if (!mounted) {
         channel.cancel();
         return;
@@ -114,7 +125,9 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
         return;
       }
       setState(() {
-        _route = route.reportId == null || route.reportId == widget.reportId ? route : null;
+        _route = route.reportId == null || route.reportId == widget.reportId
+            ? route
+            : null;
         _routeError = null;
       });
       if (_follow) {
@@ -148,10 +161,17 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
       _map.move(points.single, 16);
       return;
     }
-    _map.fitCamera(CameraFit.coordinates(coordinates: points, padding: const EdgeInsets.fromLTRB(48, 48, 64, 40), maxZoom: 17));
+    _map.fitCamera(
+      CameraFit.coordinates(
+        coordinates: points,
+        padding: const EdgeInsets.fromLTRB(48, 48, 64, 40),
+        maxZoom: 17,
+      ),
+    );
   }
 
-  static LatLng _pickup(Report report) => LatLng(report.latitude, report.longitude);
+  static LatLng _pickup(Report report) =>
+      LatLng(report.latitude, report.longitude);
 
   static LatLng? _destination(Report report) {
     final destination = report.destination;
@@ -161,8 +181,12 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
   }
 
   static LatLng _target(Report report, RouteResult? route) {
-    final toDestination = route?.toDestination ?? report.statusValue == ReportStatus.mengantarPasien;
-    return toDestination ? (_destination(report) ?? _pickup(report)) : _pickup(report);
+    final toDestination =
+        route?.toDestination ??
+        report.statusValue == ReportStatus.mengantarPasien;
+    return toDestination
+        ? (_destination(report) ?? _pickup(report))
+        : _pickup(report);
   }
 
   Future<void> _runStep(Report report, MissionStep step) async {
@@ -203,7 +227,8 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
         await _askForHandover(report, serverMessage: apiError.message);
       } else {
         showError(context, apiError);
-        if (apiError.code == 'invalid_transition' || apiError.code == 'status_changed') {
+        if (apiError.code == 'invalid_transition' ||
+            apiError.code == 'status_changed') {
           unawaited(_mission.reload());
         }
       }
@@ -216,8 +241,11 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
 
   /// Gate serah terima: setiap pasien wajib punya "diserahkan kepada" sebelum laporan selesai.
   Future<void> _askForHandover(Report report, {String? serverMessage}) async {
-    final missing = report.patients.where((patient) => (patient.handedOverTo ?? '').trim().isEmpty).length;
-    final message = serverMessage ??
+    final missing = report.patients
+        .where((patient) => (patient.handedOverTo ?? '').trim().isEmpty)
+        .length;
+    final message =
+        serverMessage ??
         (report.patients.isEmpty
             ? 'Belum ada data pasien. Isi minimal satu pasien beserta nama penerima serah terimanya.'
             : '$missing pasien belum diisi "Diserahkan kepada". Lengkapi serah terima sebelum menyelesaikan laporan.');
@@ -236,7 +264,10 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
   Future<void> _call(String phone) async {
     final launched = await launchUrl(Uri(scheme: 'tel', path: phone));
     if (!launched && mounted) {
-      showMessage(context, 'Tidak bisa membuka aplikasi telepon. Nomor pelapor: $phone');
+      showMessage(
+        context,
+        'Tidak bisa membuka aplikasi telepon. Nomor pelapor: $phone',
+      );
     }
   }
 
@@ -247,12 +278,19 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
     return mission.when(
       skipLoadingOnRefresh: true,
       skipLoadingOnReload: true,
-      loading: () => Scaffold(appBar: AppBar(title: const Text('Info Spot')), body: const _MissionSkeleton()),
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Info Spot')),
+        body: const _MissionSkeleton(),
+      ),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Info Spot')),
-        body: AsyncErrorView(error: error, onRetry: () => ref.invalidate(missionProvider(widget.reportId))),
+        body: AsyncErrorView(
+          error: error,
+          onRetry: () => ref.invalidate(missionProvider(widget.reportId)),
+        ),
       ),
-      data: (report) => report.isActive ? _buildActive(report) : _Finished(report: report),
+      data: (report) =>
+          report.isActive ? _buildActive(report) : _Finished(report: report),
     );
   }
 
@@ -269,8 +307,17 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
           ColoredBox(
             color: MedColors.canvas,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(MedSpace.md, MedSpace.md, MedSpace.md, MedSpace.sm),
-              child: _EtaCard(report: report, route: _route, error: _routeError),
+              padding: const EdgeInsets.fromLTRB(
+                MedSpace.md,
+                MedSpace.md,
+                MedSpace.md,
+                MedSpace.sm,
+              ),
+              child: _EtaCard(
+                report: report,
+                route: _route,
+                error: _routeError,
+              ),
             ),
           ),
           Expanded(flex: 6, child: _buildMap(report)),
@@ -279,13 +326,27 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
             child: DecoratedBox(
               decoration: const BoxDecoration(
                 color: MedColors.surface,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, -2))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 12,
+                    offset: Offset(0, -2),
+                  ),
+                ],
               ),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(MedSpace.gutter, MedSpace.lg, MedSpace.gutter, MedSpace.lg),
+                padding: const EdgeInsets.fromLTRB(
+                  MedSpace.gutter,
+                  MedSpace.lg,
+                  MedSpace.gutter,
+                  MedSpace.lg,
+                ),
                 children: [
                   StatusStepper(
-                    steps: [for (final status in missionStatuses(report)) StatusStep(status, ReportStatus.label(status))],
+                    steps: [
+                      for (final status in missionStatuses(report))
+                        StatusStep(status, ReportStatus.label(status)),
+                    ],
                     current: report.statusValue,
                   ),
                   const SizedBox(height: MedSpace.lg),
@@ -316,9 +377,11 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
                           caption: report.patients.isEmpty
                               ? 'Belum ada'
                               : report.allPatientsHandedOver
-                                  ? 'Lengkap'
-                                  : '${report.patients.length} pasien',
-                          warn: report.patients.isNotEmpty && !report.allPatientsHandedOver,
+                              ? 'Lengkap'
+                              : '${report.patients.length} pasien',
+                          warn:
+                              report.patients.isNotEmpty &&
+                              !report.allPatientsHandedOver,
                           onTap: () => context.push(Routes.patients(report.id)),
                         ),
                       ),
@@ -328,7 +391,8 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
                           key: const Key('mission-photos'),
                           icon: Icons.photo_camera_outlined,
                           label: 'Foto',
-                          caption: '${report.attachments.where((item) => item.type.value == 'foto_penanganan').length} foto',
+                          caption:
+                              '${report.attachments.where((item) => item.type.value == 'foto_penanganan').length} foto',
                           onTap: () => context.push(Routes.photos(report.id)),
                         ),
                       ),
@@ -344,7 +408,12 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(MedSpace.gutter, MedSpace.sm, MedSpace.gutter, MedSpace.md),
+                  padding: const EdgeInsets.fromLTRB(
+                    MedSpace.gutter,
+                    MedSpace.sm,
+                    MedSpace.gutter,
+                    MedSpace.md,
+                  ),
                   child: SizedBox(
                     height: 62,
                     child: PrimaryButton(
@@ -394,7 +463,18 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
           polylines: [
             if (route != null && route.geometry.length > 1)
               Polyline(
-                points: [for (final point in route.geometry) LatLng(point[0], point[1])],
+                // Garis dimulai dari posisi GPS terkini, bukan titik awal snapshot server.
+                points: [
+                  for (final point
+                      in fix == null
+                          ? route.geometry
+                          : trimRouteToPosition(
+                              route.geometry,
+                              fix.latitude,
+                              fix.longitude,
+                            ))
+                    LatLng(point[0], point[1]),
+                ],
                 color: MedColors.brand,
                 strokeWidth: 6,
                 borderColor: Colors.white,
@@ -402,15 +482,31 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
               ),
           ],
           markers: [
-            Marker(point: _pickup(report), width: 46, height: 46, alignment: Alignment.topCenter, child: const PickupPin(size: 46)),
+            Marker(
+              point: _pickup(report),
+              width: 46,
+              height: 46,
+              alignment: Alignment.topCenter,
+              child: const PickupPin(size: 46),
+            ),
             if (destination != null)
-              Marker(point: destination, width: 40, height: 40, child: const _DestinationMarker()),
+              Marker(
+                point: destination,
+                width: 40,
+                height: 40,
+                child: const _DestinationMarker(),
+              ),
             if (me != null)
               Marker(
                 point: me,
                 width: 54,
                 height: 54,
-                child: AmbulanceMarker(heading: fix!.heading != null && fix.heading! >= 0 ? fix.heading : null, size: 54),
+                child: AmbulanceMarker(
+                  heading: fix!.heading != null && fix.heading! >= 0
+                      ? fix.heading
+                      : null,
+                  size: 54,
+                ),
               ),
           ],
         );
@@ -427,32 +523,49 @@ class _InfoSpotHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        color: MedColors.brand,
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(MedSpace.xs, MedSpace.xs, MedSpace.lg, MedSpace.md),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: 'Kembali ke beranda',
-                  color: Colors.white,
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  onPressed: () => context.canPop() ? context.pop() : context.go(Routes.home),
-                ),
-                const Expanded(
-                  child: Text('Info Spot', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-                ),
-                StatusBadge(status: report.statusValue, label: report.status.label),
-              ],
-            ),
-          ),
+    color: MedColors.brand,
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          MedSpace.xs,
+          MedSpace.xs,
+          MedSpace.lg,
+          MedSpace.md,
         ),
-      );
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Kembali ke beranda',
+              color: Colors.white,
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go(Routes.home),
+            ),
+            const Expanded(
+              child: Text(
+                'Info Spot',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            StatusBadge(status: report.statusValue, label: report.status.label),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _EtaCard extends StatelessWidget {
-  const _EtaCard({required this.report, required this.route, required this.error});
+  const _EtaCard({
+    required this.report,
+    required this.route,
+    required this.error,
+  });
 
   final Report report;
   final RouteResult? route;
@@ -462,7 +575,9 @@ class _EtaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final route = this.route;
     final arrived = report.statusValue == ReportStatus.tibaDiLokasi;
-    final String targetLabel = (route?.toDestination ?? false) || report.statusValue == ReportStatus.mengantarPasien
+    final String targetLabel =
+        (route?.toDestination ?? false) ||
+            report.statusValue == ReportStatus.mengantarPasien
         ? 'Menuju tujuan antar'
         : 'Menuju titik jemput';
 
@@ -493,15 +608,30 @@ class _EtaCard extends StatelessWidget {
         children: [
           Text(
             route.stale ? '$targetLabel · perkiraan terakhir' : targetLabel,
-            style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w800, fontSize: 13),
+            style: const TextStyle(
+              color: MedColors.inkMuted,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: MedSpace.xs),
           IntrinsicHeight(
             child: Row(
               children: [
-                Expanded(child: _EtaValue(label: 'Perkiraan tiba', value: formatDuration(route.durationMin), valueKey: const Key('mission-eta'))),
+                Expanded(
+                  child: _EtaValue(
+                    label: 'Perkiraan tiba',
+                    value: formatDuration(route.durationMin),
+                    valueKey: const Key('mission-eta'),
+                  ),
+                ),
                 const VerticalDivider(width: MedSpace.xl),
-                Expanded(child: _EtaValue(label: 'Sisa jarak', value: formatDistance(route.distanceKm))),
+                Expanded(
+                  child: _EtaValue(
+                    label: 'Sisa jarak',
+                    value: formatDistance(route.distanceKm),
+                  ),
+                ),
               ],
             ),
           ),
@@ -516,7 +646,10 @@ class _EtaCard extends StatelessWidget {
         elevation: 2,
         shadowColor: Colors.black26,
         borderRadius: BorderRadius.circular(MedRadius.lg),
-        child: Padding(padding: const EdgeInsets.all(MedSpace.lg), child: content),
+        child: Padding(
+          padding: const EdgeInsets.all(MedSpace.lg),
+          child: content,
+        ),
       ),
     );
   }
@@ -531,16 +664,31 @@ class _EtaValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(color: MedColors.inkMuted, fontSize: 12.5, fontWeight: FontWeight.w700)),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(value, key: valueKey, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: MedColors.ink)),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          color: MedColors.inkMuted,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          value,
+          key: valueKey,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: MedColors.ink,
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 }
 
 class _EtaMessage extends StatelessWidget {
@@ -551,13 +699,13 @@ class _EtaMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 2),
-          Text(message, style: const TextStyle(color: MedColors.inkMuted)),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 2),
+      Text(message, style: const TextStyle(color: MedColors.inkMuted)),
+    ],
+  );
 }
 
 class _ReportCard extends StatelessWidget {
@@ -575,27 +723,52 @@ class _ReportCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            ReportTypeTile(icon: reportTypeIcon(type?.icon, code: type?.code), color: colorFromHex(type?.color), size: 48),
+            ReportTypeTile(
+              icon: reportTypeIcon(type?.icon, code: type?.code),
+              color: colorFromHex(type?.color),
+              size: 48,
+            ),
             const SizedBox(width: MedSpace.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(report.typeName, style: Theme.of(context).textTheme.titleMedium),
-                  SelectableText(report.code, style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700)),
+                  Text(
+                    report.typeName,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SelectableText(
+                    report.code,
+                    style: const TextStyle(
+                      color: MedColors.inkMuted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
         const SizedBox(height: MedSpace.sm),
-        if ((report.description ?? '').isNotEmpty) InfoRow(icon: Icons.notes_rounded, label: 'Deskripsi', value: report.description!),
-        InfoRow(icon: Icons.location_on_outlined, label: 'Alamat kejadian', value: report.address ?? report.shortAddress ?? '-'),
+        if ((report.description ?? '').isNotEmpty)
+          InfoRow(
+            icon: Icons.notes_rounded,
+            label: 'Deskripsi',
+            value: report.description!,
+          ),
+        InfoRow(
+          icon: Icons.location_on_outlined,
+          label: 'Alamat kejadian',
+          value: report.address ?? report.shortAddress ?? '-',
+        ),
         if (destination?.name != null || destination?.address != null)
           InfoRow(
             icon: Icons.flag_outlined,
             label: 'Tujuan antar',
-            value: [destination?.name, destination?.address].whereType<String>().join(', '),
+            value: [
+              destination?.name,
+              destination?.address,
+            ].whereType<String>().join(', '),
           ),
       ],
     );
@@ -615,7 +788,10 @@ class _ReporterRow extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(MedSpace.md),
-      decoration: BoxDecoration(color: MedColors.field, borderRadius: BorderRadius.circular(MedRadius.md)),
+      decoration: BoxDecoration(
+        color: MedColors.field,
+        borderRadius: BorderRadius.circular(MedRadius.md),
+      ),
       child: Row(
         children: [
           const Icon(Icons.person_outline_rounded, color: MedColors.inkMuted),
@@ -624,9 +800,20 @@ class _ReporterRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Pelapor', style: TextStyle(color: MedColors.inkMuted, fontSize: 12.5, fontWeight: FontWeight.w700)),
-                Text(reporter?.name ?? '-', style: Theme.of(context).textTheme.titleSmall),
-                if (phone != null) Text(phone, style: const TextStyle(color: MedColors.ink)),
+                const Text(
+                  'Pelapor',
+                  style: TextStyle(
+                    color: MedColors.inkMuted,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  reporter?.name ?? '-',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                if (phone != null)
+                  Text(phone, style: const TextStyle(color: MedColors.ink)),
               ],
             ),
           ),
@@ -634,7 +821,10 @@ class _ReporterRow extends StatelessWidget {
             FilledButton.icon(
               key: const Key('mission-call'),
               onPressed: () => onCall(phone),
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 48), padding: const EdgeInsets.symmetric(horizontal: MedSpace.lg)),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: MedSpace.lg),
+              ),
               icon: const Icon(Icons.call_rounded),
               label: const Text('PANGGIL'),
             ),
@@ -664,39 +854,52 @@ class _ToolButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: [label, ?caption, if (badge > 0) '$badge pesan baru'].join(', '),
-        excludeSemantics: true,
-        child: Material(
-          color: MedColors.surface,
-          borderRadius: BorderRadius.circular(MedRadius.md),
-          child: InkWell(
-            onTap: onTap,
+    button: true,
+    label: [label, ?caption, if (badge > 0) '$badge pesan baru'].join(', '),
+    excludeSemantics: true,
+    child: Material(
+      color: MedColors.surface,
+      borderRadius: BorderRadius.circular(MedRadius.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(MedRadius.md),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(
+            vertical: MedSpace.md,
+            horizontal: MedSpace.xs,
+          ),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(MedRadius.md),
-            child: Ink(
-              padding: const EdgeInsets.symmetric(vertical: MedSpace.md, horizontal: MedSpace.xs),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(MedRadius.md),
-                border: Border.all(color: warn ? MedColors.warning : MedColors.line, width: warn ? 2 : 1),
-              ),
-              child: Column(
-                children: [
-                  CountBadge(count: badge, child: Icon(icon, color: MedColors.brand, size: 26)),
-                  const SizedBox(height: 4),
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  if (caption != null)
-                    Text(
-                      caption!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: warn ? MedColors.warning : MedColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700),
-                    ),
-                ],
-              ),
+            border: Border.all(
+              color: warn ? MedColors.warning : MedColors.line,
+              width: warn ? 2 : 1,
             ),
           ),
+          child: Column(
+            children: [
+              CountBadge(
+                count: badge,
+                child: Icon(icon, color: MedColors.brand, size: 26),
+              ),
+              const SizedBox(height: 4),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+              if (caption != null)
+                Text(
+                  caption!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: warn ? MedColors.warning : MedColors.inkMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _DestinationMarker extends StatelessWidget {
@@ -704,17 +907,17 @@ class _DestinationMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: 'Tujuan antar',
-        child: Container(
-          decoration: BoxDecoration(
-            color: MedColors.ink,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-          ),
-          child: const Icon(Icons.flag_rounded, color: Colors.white, size: 20),
-        ),
-      );
+    label: 'Tujuan antar',
+    child: Container(
+      decoration: BoxDecoration(
+        color: MedColors.ink,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+      ),
+      child: const Icon(Icons.flag_rounded, color: Colors.white, size: 20),
+    ),
+  );
 }
 
 /// Laporan sudah selesai (atau dibatalkan): ringkasan dan kembali ke standby.
@@ -739,8 +942,15 @@ class _Finished extends ConsumerWidget {
                 width: 96,
                 height: 96,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: done ? const Color(0xFFDCFCE7) : MedColors.field, shape: BoxShape.circle),
-                child: Icon(done ? Icons.check_rounded : Icons.block_rounded, size: 52, color: done ? MedColors.success : MedColors.inkMuted),
+                decoration: BoxDecoration(
+                  color: done ? const Color(0xFFDCFCE7) : MedColors.field,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  done ? Icons.check_rounded : Icons.block_rounded,
+                  size: 52,
+                  color: done ? MedColors.success : MedColors.inkMuted,
+                ),
               ),
               const SizedBox(height: MedSpace.lg),
               Text(
@@ -753,7 +963,10 @@ class _Finished extends ConsumerWidget {
               Text(
                 '${report.typeName} · ${report.code}\n${formatDateTime(report.completedAt)}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: MedColors.inkMuted,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: MedSpace.md),
               Text(
@@ -785,14 +998,14 @@ class _MissionSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(MedSpace.gutter),
-        children: const [
-          Skeleton(height: 260, radius: MedRadius.lg),
-          SizedBox(height: MedSpace.lg),
-          Skeleton(height: 40),
-          SizedBox(height: MedSpace.md),
-          Skeleton(height: 140, radius: MedRadius.lg),
-        ],
-      );
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.all(MedSpace.gutter),
+    children: const [
+      Skeleton(height: 260, radius: MedRadius.lg),
+      SizedBox(height: MedSpace.lg),
+      Skeleton(height: 40),
+      SizedBox(height: MedSpace.md),
+      Skeleton(height: 140, radius: MedRadius.lg),
+    ],
+  );
 }

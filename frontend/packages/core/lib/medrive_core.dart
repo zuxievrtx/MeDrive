@@ -7,6 +7,7 @@ export 'src/api/api_response.dart';
 export 'src/config/app_config.dart';
 export 'src/config/app_role.dart';
 export 'src/location/location_ping_service.dart';
+export 'src/location/route_progress.dart';
 export 'src/models/chat.dart';
 export 'src/models/common.dart';
 export 'src/models/driver.dart';
