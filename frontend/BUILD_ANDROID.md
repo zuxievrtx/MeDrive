@@ -90,6 +90,66 @@ Hasil: `frontend\apps\medriver\build\app\outputs\flutter-apk\app-release.apk`.
 - Build release **masih ditandatangani debug key**. Untuk distribusi, buat keystore dan isi
   `signingConfigs` di `android/app/build.gradle.kts`.
 
+## 4A. Build cepat dan APK kecil
+
+Perintah yang disarankan untuk APK yang dipasang langsung ke HP (bukan Play Store):
+
+```bat
+cd frontend\apps\medriver
+flutter build apk --release ^
+  --target-platform android-arm64 --split-per-abi ^
+  --obfuscate --split-debug-info=build\symbols ^
+  --dart-define=API_BASE_URL=https://medrive.example.id ^
+  --dart-define=WS_URL=wss://medrive.example.id:443 ^
+  --dart-define=WS_KEY=<REVERB_APP_KEY> ^
+  --dart-define=APP_VERSION=1.0.0
+```
+
+Hasil: `build\app\outputs\flutter-apk\app-arm64-v8a-release.apk`.
+
+| Opsi | Efek |
+|---|---|
+| `--target-platform android-arm64` | Hanya mengompilasi satu arsitektur. Ini penghemat waktu terbesar, karena kompilasi native dilakukan sekali per arsitektur. Tanpa opsi ini `--split-per-abi` membangun tiga APK (arm, arm64, x64). |
+| `--split-per-abi` | APK hanya berisi kode satu arsitektur, bukan semuanya sekaligus. Ini penghemat ukuran terbesar. |
+| `--obfuscate --split-debug-info=...` | Nama kelas dan simbol Dart diperkecil. Simpan folder `build\symbols` bila ingin membaca stack trace crash nanti. |
+| Bawaan release | R8 (minify) dan penghapusan resource tak terpakai sudah aktif otomatis di build release Flutter. Ikon Material yang tidak dipakai juga dibuang otomatis. Jangan menambahkan `--no-shrink` dan `--no-tree-shake-icons`. |
+
+Batasan `android-arm64`:
+- Tidak bisa dipasang di HP lama yang hanya 32-bit. HP modern semuanya 64-bit.
+- Tidak jalan di emulator berarsitektur x86_64 (umum di Android Studio pada Windows). Untuk emulator pakai `flutter run` (debug), atau build `--target-platform android-x64`.
+- Untuk HP 32-bit, ganti dengan `--target-platform android-arm`.
+
+Mengukur apa yang membuat APK besar (hasil pengukuran sebenarnya, bukan perkiraan):
+
+```bat
+flutter build apk --release --target-platform android-arm64 --analyze-size
+```
+
+Perintah itu mencetak lokasi berkas `*-code-size-analysis_*.json`. Buka di Flutter DevTools
+(`dart devtools`, menu App Size) untuk melihat ukuran per paket.
+
+Mempercepat build:
+- Jangan jalankan `flutter clean` kecuali build rusak. Build kedua dan seterusnya jauh lebih cepat
+  karena cache Gradle dipakai ulang. Build pertama paling lama karena mengunduh dependensi dan NDK.
+- Buat/ubah `%USERPROFILE%\.gradle\gradle.properties` (berlaku untuk semua proyek, tidak mengubah repo):
+  ```properties
+  org.gradle.daemon=true
+  org.gradle.parallel=true
+  org.gradle.caching=true
+  ```
+- `android\gradle.properties` di repo meminta `-Xmx8G`. Bila RAM laptop 8 GB atau kurang, tambahkan
+  baris `org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G` di berkas Gradle pengguna di atas.
+  Berkas pengguna menimpa nilai di repo. Memori yang kurang membuat build justru lebih lambat.
+- Untuk sekadar mencoba perubahan di HP, pakai `flutter run` (debug, hot reload) dan bukan build APK.
+- Taruh proyek dan folder `C:\Android` di SSD, dan kecualikan folder proyek, `.gradle`, dan
+  `C:\Android` dari pemindaian antivirus real-time bila memungkinkan.
+
+Pilihan lain bila masih ingin lebih kecil (ada konsekuensinya):
+- Font Nunito dibundel 5 ketebalan (±125 KB per berkas, total ±630 KB). Mengurangi ketebalan
+  mengubah tampilan teks, jadi hanya lakukan bila ukuran sangat penting.
+- Distribusi lewat Play Store memakai `flutter build appbundle --release`; Play membuat APK
+  per perangkat otomatis, sehingga unduhan pengguna lebih kecil dari APK universal.
+
 ## 5. Push notification (opsional)
 
 Tanpa Firebase aplikasi tetap jalan; tawaran driver masuk lewat tarik berkala. Untuk mengaktifkan:
