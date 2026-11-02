@@ -394,7 +394,13 @@ class _MissionScreenState extends ConsumerState<MissionScreen> {
           polylines: [
             if (route != null && route.geometry.length > 1)
               Polyline(
-                points: [for (final point in route.geometry) LatLng(point[0], point[1])],
+                // Garis dimulai dari posisi GPS terkini, bukan titik awal snapshot server.
+                points: [
+                  for (final point in fix == null
+                      ? route.geometry
+                      : trimRouteToPosition(route.geometry, fix.latitude, fix.longitude))
+                    LatLng(point[0], point[1]),
+                ],
                 color: MedColors.brand,
                 strokeWidth: 6,
                 borderColor: Colors.white,
