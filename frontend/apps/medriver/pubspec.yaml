@@ -1,4 +1,3 @@
-
 name: medriver
 description: MeDriveR - aplikasi driver ambulans MeDrive (shift, tawaran dispatch, misi, ping lokasi).
 publish_to: none
@@ -12,6 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
   material_ui: ^1.8.0
   medrive_core:
     path: ../../packages/core

@@ -1,4 +1,6 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:medrive_core/medrive_core.dart';
 import 'package:medrive_ui/medrive_ui.dart';
@@ -14,7 +16,10 @@ import 'security_screen.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showLogoutDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -139,8 +144,11 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _openSecurityScreen(BuildContext context) {
-    Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => const SecurityScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SecurityScreen(),
+      ),
+    );
   }
 
   @override
@@ -148,11 +156,16 @@ class ProfileScreen extends ConsumerWidget {
     final driver = ref.watch(driverProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(
+        title: const Text('Profil'),
+      ),
       body: driver.when(
         skipLoadingOnRefresh: true,
         skipLoadingOnReload: true,
-        loading: () => const SkeletonList(count: 3, itemHeight: 120),
+        loading: () => const SkeletonList(
+          count: 3,
+          itemHeight: 120,
+        ),
         error: (error, _) => AsyncErrorView(
           error: error,
           onRetry: () => ref.invalidate(driverProvider),
@@ -225,7 +238,9 @@ class ProfileScreen extends ConsumerWidget {
                   value: formatDay(profile?.licenseExpiresAt),
                   trailing: profile?.licenseExpiryState == null
                       ? null
-                      : _ExpiryChip(state: profile!.licenseExpiryState),
+                      : _ExpiryChip(
+                          state: profile!.licenseExpiryState,
+                        ),
                 ),
 
                 const SizedBox(height: MedSpace.xl),
@@ -258,25 +273,43 @@ class ProfileScreen extends ConsumerWidget {
                 const _Title('Sertifikat'),
                 if (account.certifications.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: MedSpace.md),
+                    padding: EdgeInsets.symmetric(
+                      vertical: MedSpace.md,
+                    ),
                     child: Text(
                       'Belum ada sertifikat tercatat. Badge Terverifikasi muncul setelah admin menambahkan sertifikat yang masih berlaku.',
-                      style: TextStyle(color: MedColors.inkMuted),
+                      style: TextStyle(
+                        color: MedColors.inkMuted,
+                      ),
                     ),
                   )
                 else
                   for (final certification in account.certifications)
-                    _CertificationTile(certification: certification),
+                    _CertificationTile(
+                      certification: certification,
+                    ),
 
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Pengaturan akun'),
+
+                // Menu Bantuan
+                _ProfileMenuTile(
+                  icon: Icons.help_outline_rounded,
+                  title: 'Bantuan',
+                  subtitle: 'Pusat bantuan dan dukungan',
+                  onTap: () => context.push('/profile/help'),
+                ),
+
+                // Menu Keamanan Akun
                 _ProfileMenuTile(
                   icon: Icons.security_rounded,
                   title: 'Keamanan Akun',
                   subtitle: 'Kelola keamanan akun',
                   onTap: () => _openSecurityScreen(context),
                 ),
+
+                // Menu Keluar
                 _ProfileMenuTile(
                   icon: Icons.logout_rounded,
                   title: 'Keluar',
@@ -297,7 +330,9 @@ class ProfileScreen extends ConsumerWidget {
 
 // Header profil
 class _Header extends StatelessWidget {
-  const _Header({required this.account});
+  const _Header({
+    required this.account,
+  });
 
   final DriverAccount account;
 
@@ -342,7 +377,9 @@ class _Header extends StatelessWidget {
                 ),
                 if (account.isVerified) ...[
                   const SizedBox(height: MedSpace.sm),
-                  const VerifiedBadge(key: Key('profile-verified')),
+                  const VerifiedBadge(
+                    key: Key('profile-verified'),
+                  ),
                 ],
               ],
             ),
@@ -362,8 +399,13 @@ class _Title extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: MedSpace.sm),
-      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+      padding: const EdgeInsets.only(
+        bottom: MedSpace.sm,
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
     );
   }
 }
@@ -390,7 +432,11 @@ class _ProfileInfoRow extends StatelessWidget {
         vertical: MedSpace.md,
       ),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: MedColors.line)),
+        border: Border(
+          bottom: BorderSide(
+            color: MedColors.line,
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -401,7 +447,11 @@ class _ProfileInfoRow extends StatelessWidget {
               color: MedColors.brandSoft,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: MedColors.brandDeep, size: 20),
+            child: Icon(
+              icon,
+              color: MedColors.brandDeep,
+              size: 20,
+            ),
           ),
           const SizedBox(width: MedSpace.md),
           Expanded(
@@ -454,7 +504,9 @@ class _ProfileMenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isLogout ? const Color(0xFFE6002D) : MedColors.ink;
+    final color = isLogout
+        ? const Color(0xFFE6002D)
+        : MedColors.ink;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
@@ -465,12 +517,16 @@ class _ProfileMenuTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: isLogout ? const Color(0xFFFFEEEE) : MedColors.brandSoft,
+          color: isLogout
+              ? const Color(0xFFFFEEEE)
+              : MedColors.brandSoft,
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          color: isLogout ? const Color(0xFFE6002D) : MedColors.brandDeep,
+          color: isLogout
+              ? const Color(0xFFE6002D)
+              : MedColors.brandDeep,
         ),
       ),
       title: Text(
@@ -485,12 +541,17 @@ class _ProfileMenuTile extends StatelessWidget {
         padding: const EdgeInsets.only(top: 4),
         child: Text(
           subtitle,
-          style: const TextStyle(color: MedColors.inkMuted, fontSize: 12),
+          style: const TextStyle(
+            color: MedColors.inkMuted,
+            fontSize: 12,
+          ),
         ),
       ),
       trailing: Icon(
         Icons.chevron_right_rounded,
-        color: isLogout ? const Color(0xFFE6002D) : MedColors.inkMuted,
+        color: isLogout
+            ? const Color(0xFFE6002D)
+            : MedColors.inkMuted,
       ),
       onTap: onTap,
     );
@@ -499,23 +560,34 @@ class _ProfileMenuTile extends StatelessWidget {
 
 // Chip status masa berlaku
 class _ExpiryChip extends StatelessWidget {
-  const _ExpiryChip({required this.state});
+  const _ExpiryChip({
+    required this.state,
+  });
 
   final String? state;
 
   @override
   Widget build(BuildContext context) {
     final (background, foreground) = switch (state) {
-      ExpiryState.expired => (const Color(0xFFFEE2E2), const Color(0xFF991B1B)),
+      ExpiryState.expired => (
+          const Color(0xFFFEE2E2),
+          const Color(0xFF991B1B),
+        ),
       ExpiryState.expiring => (
-        const Color(0xFFFEF3C7),
-        const Color(0xFF92400E),
-      ),
-      _ => (const Color(0xFFDCFCE7), const Color(0xFF166534)),
+          const Color(0xFFFEF3C7),
+          const Color(0xFF92400E),
+        ),
+      _ => (
+          const Color(0xFFDCFCE7),
+          const Color(0xFF166534),
+        ),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(MedRadius.sm),
@@ -534,7 +606,9 @@ class _ExpiryChip extends StatelessWidget {
 
 // Item sertifikat
 class _CertificationTile extends StatelessWidget {
-  const _CertificationTile({required this.certification});
+  const _CertificationTile({
+    required this.certification,
+  });
 
   final DriverCertification certification;
 
@@ -543,7 +617,10 @@ class _CertificationTile extends StatelessWidget {
     final meta = [
       certification.issuer,
       certification.certificateNumber,
-    ].whereType<String>().where((part) => part.isNotEmpty).join(' · ');
+    ]
+        .whereType<String>()
+        .where((part) => part.isNotEmpty)
+        .join(' · ');
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -551,7 +628,11 @@ class _CertificationTile extends StatelessWidget {
         vertical: MedSpace.md,
       ),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: MedColors.line)),
+        border: Border(
+          bottom: BorderSide(
+            color: MedColors.line,
+          ),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,17 +658,26 @@ class _CertificationTile extends StatelessWidget {
                   ),
                 ),
                 if (meta.isNotEmpty)
-                  Text(meta, style: const TextStyle(color: MedColors.inkMuted)),
+                  Text(
+                    meta,
+                    style: const TextStyle(
+                      color: MedColors.inkMuted,
+                    ),
+                  ),
                 Text(
                   certification.expiresAt == null
                       ? 'Tanpa masa berlaku'
                       : 'Berlaku sampai ${formatDay(certification.expiresAt)}',
-                  style: const TextStyle(color: MedColors.ink),
+                  style: const TextStyle(
+                    color: MedColors.ink,
+                  ),
                 ),
               ],
             ),
           ),
-          _ExpiryChip(state: certification.expiryState),
+          _ExpiryChip(
+            state: certification.expiryState,
+          ),
         ],
       ),
     );

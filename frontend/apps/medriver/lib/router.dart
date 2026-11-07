@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -14,6 +15,7 @@ import 'features/mission/handling_photos_screen.dart';
 import 'features/mission/mission_screen.dart';
 import 'features/mission/patients_screen.dart';
 import 'features/offer/offer_screen.dart';
+import 'features/profile/help_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/profile/security_screen.dart';
 import 'state/session.dart';
@@ -26,6 +28,7 @@ abstract final class Routes {
   static const chats = '/chat';
   static const profile = '/profile';
   static const security = '/profile/security';
+  static const help = '/profile/help';
   static const history = '/history';
 
   static String offer(int dispatchId) => '/offer/$dispatchId';
@@ -57,13 +60,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       return _redirect(session.value, state.matchedLocation);
     },
     routes: [
-      GoRoute(path: Routes.splash, builder: (_, _) => const SplashScreen()),
-      GoRoute(path: Routes.login, builder: (_, _) => const LoginScreen()),
+      GoRoute(
+        path: Routes.splash,
+        builder: (_, _) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: Routes.login,
+        builder: (_, _) => const LoginScreen(),
+      ),
       GoRoute(
         path: Routes.forcePassword,
         builder: (_, _) => const ForcePasswordScreen(),
       ),
-      GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
+      GoRoute(
+        path: Routes.home,
+        builder: (_, _) => const HomeScreen(),
+      ),
       GoRoute(
         path: '/offer/:id',
         pageBuilder: (_, state) => MaterialPage<void>(
@@ -103,9 +115,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
-      GoRoute(path: Routes.security, builder: (_, _) => const SecurityScreen()),
-      
+      GoRoute(
+        path: Routes.profile,
+        builder: (_, _) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: Routes.security,
+        builder: (_, _) => const SecurityScreen(),
+      ),
+      GoRoute(
+        path: Routes.help,
+        builder: (_, _) => const HelpScreen(),
+      ),
       GoRoute(
         path: Routes.history,
         builder: (_, _) => const HistoryScreen(),
@@ -139,7 +160,9 @@ String? _redirect(SessionState session, String location) {
 
     case SessionStatus.authenticated:
       if (session.mustChangePassword) {
-        return location == Routes.forcePassword ? null : Routes.forcePassword;
+        return location == Routes.forcePassword
+            ? null
+            : Routes.forcePassword;
       }
 
       if (location == Routes.splash ||
