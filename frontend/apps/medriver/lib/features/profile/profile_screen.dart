@@ -4,15 +4,144 @@ import 'package:medrive_core/medrive_core.dart';
 import 'package:medrive_ui/medrive_ui.dart';
 
 import '../../state/driver_state.dart';
+import '../../state/session.dart';
 import '../../widgets/feedback.dart';
 import '../../widgets/media.dart';
 import 'security_screen.dart';
 
-/// Profil driver (hanya baca; data kepegawaian diatur admin pusat):
-/// akun, kepegawaian, SIM, ambulans aktif, sertifikat + status
-/// kedaluwarsa, badge Terverifikasi. Tanpa rating.
+/// Profil driver.
+/// Data akun dan kepegawaian hanya dapat dikelola oleh admin pusat.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8F2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFE6002D),
+                    size: 38,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Keluar dari akun?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF171717),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Kamu perlu masuk lagi untuk menggunakan MeDrive.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF777777),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 26),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext, false);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFE6002D),
+                          side: const BorderSide(
+                            color: Color(0xFFE6002D),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext, true);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE6002D),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        child: const Text(
+                          'Ya, Keluar',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(sessionProvider.notifier).logout();
+    } catch (error) {
+      if (context.mounted) {
+        showError(context, error);
+      }
+    }
+  }
+
+  void _openSecurityScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const SecurityScreen()));
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,10 +152,7 @@ class ProfileScreen extends ConsumerWidget {
       body: driver.when(
         skipLoadingOnRefresh: true,
         skipLoadingOnReload: true,
-        loading: () => const SkeletonList(
-          count: 3,
-          itemHeight: 120,
-        ),
+        loading: () => const SkeletonList(count: 3, itemHeight: 120),
         error: (error, _) => AsyncErrorView(
           error: error,
           onRetry: () => ref.invalidate(driverProvider),
@@ -38,7 +164,9 @@ class ProfileScreen extends ConsumerWidget {
           final ambulance = snapshot.shift?.ambulance;
 
           return RefreshIndicator(
-            onRefresh: () => ref.read(driverProvider.notifier).refresh(),
+            onRefresh: () {
+              return ref.read(driverProvider.notifier).refresh();
+            },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(
@@ -49,59 +177,34 @@ class ProfileScreen extends ConsumerWidget {
               ),
               children: [
                 _Header(account: account),
-
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Detail akun'),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.call_outlined,
                   label: 'Nomor telepon',
                   value: account.phone ?? '-',
                 ),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.mail_outline_rounded,
                   label: 'Email',
                   value: account.email,
                 ),
 
-                // Menu keamanan akun
-                const SizedBox(height: MedSpace.md),
-
-                ListTile(
-                  leading: const Icon(Icons.security_rounded),
-                  title: const Text('Keamanan Akun'),
-                  subtitle: const Text(
-                    'Kelola kata sandi dan keamanan akun',
-                  ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SecurityScreen(),
-                      ),
-                    );
-                  },
-                ),
-
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Kepegawaian'),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.local_hospital_outlined,
                   label: 'Klinik',
                   value: clinic?.name ?? '-',
                 ),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.apartment_rounded,
                   label: 'Instansi',
                   value: clinic?.institution?.name ?? '-',
                 ),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.badge_outlined,
                   label: 'Nomor pegawai',
                   value: profile?.employeeNumber ?? '-',
@@ -110,43 +213,37 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Surat Izin Mengemudi'),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.credit_card_rounded,
                   label:
                       'Nomor SIM${profile?.licenseClass == null ? '' : ' (${profile!.licenseClass!.label})'}',
                   value: profile?.licenseNumber ?? '-',
                 ),
-
-                _Row(
+                _ProfileInfoRow(
                   icon: Icons.event_outlined,
                   label: 'Berlaku sampai',
                   value: formatDay(profile?.licenseExpiresAt),
                   trailing: profile?.licenseExpiryState == null
                       ? null
-                      : _ExpiryChip(
-                          state: profile!.licenseExpiryState,
-                        ),
+                      : _ExpiryChip(state: profile!.licenseExpiryState),
                 ),
 
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Ambulans aktif'),
-
                 if (ambulance == null)
-                  const _Row(
+                  const _ProfileInfoRow(
                     icon: Icons.airport_shuttle_outlined,
                     label: 'Plat nomor',
                     value: 'Belum ada shift terbuka',
                   )
                 else ...[
-                  _Row(
+                  _ProfileInfoRow(
                     icon: Icons.airport_shuttle_outlined,
                     label: 'Plat nomor',
                     value: ambulance.plateNumber,
                   ),
-
-                  _Row(
+                  _ProfileInfoRow(
                     icon: Icons.info_outline_rounded,
                     label: 'Kendaraan',
                     value: [
@@ -159,26 +256,36 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: MedSpace.xl),
 
                 const _Title('Sertifikat'),
-
                 if (account.certifications.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MedSpace.md,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: MedSpace.md),
                     child: Text(
-                      'Belum ada sertifikat tercatat. '
-                      'Badge Terverifikasi muncul setelah admin '
-                      'menambahkan sertifikat yang masih berlaku.',
-                      style: TextStyle(
-                        color: MedColors.inkMuted,
-                      ),
+                      'Belum ada sertifikat tercatat. Badge Terverifikasi muncul setelah admin menambahkan sertifikat yang masih berlaku.',
+                      style: TextStyle(color: MedColors.inkMuted),
                     ),
                   )
                 else
                   for (final certification in account.certifications)
-                    _CertificationTile(
-                      certification: certification,
-                    ),
+                    _CertificationTile(certification: certification),
+
+                const SizedBox(height: MedSpace.xl),
+
+                const _Title('Pengaturan akun'),
+                _ProfileMenuTile(
+                  icon: Icons.security_rounded,
+                  title: 'Keamanan Akun',
+                  subtitle: 'Kelola keamanan akun',
+                  onTap: () => _openSecurityScreen(context),
+                ),
+                _ProfileMenuTile(
+                  icon: Icons.logout_rounded,
+                  title: 'Keluar',
+                  subtitle: 'Keluar dari akun MeDrive',
+                  isLogout: true,
+                  onTap: () => _showLogoutDialog(context, ref),
+                ),
+
+                const SizedBox(height: MedSpace.xl),
               ],
             ),
           );
@@ -188,86 +295,82 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
+// Header profil
 class _Header extends StatelessWidget {
   const _Header({required this.account});
 
   final DriverAccount account;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(MedSpace.xl),
-        decoration: BoxDecoration(
-          color: MedColors.brand,
-          borderRadius: BorderRadius.circular(MedRadius.md),
-        ),
-        child: Row(
-          children: [
-            InitialsAvatar(
-              name: account.name,
-              initials: account.initials,
-              photoUrl: account.driverProfile?.photoUrl,
-              size: 76,
-              onBrand: true,
-            ),
-
-            const SizedBox(width: MedSpace.lg),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    account.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(MedSpace.xl),
+      decoration: BoxDecoration(
+        color: MedColors.brand,
+        borderRadius: BorderRadius.circular(MedRadius.md),
+      ),
+      child: Row(
+        children: [
+          InitialsAvatar(
+            name: account.name,
+            initials: account.initials,
+            photoUrl: account.driverProfile?.photoUrl,
+            size: 76,
+            onBrand: true,
+          ),
+          const SizedBox(width: MedSpace.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  account.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                   ),
-
-                  const Text(
-                    'Driver ambulans',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const Text(
+                  'Driver ambulans',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
-
-                  if (account.isVerified) ...[
-                    const SizedBox(height: MedSpace.sm),
-                    const VerifiedBadge(
-                      key: Key('profile-verified'),
-                    ),
-                  ],
+                ),
+                if (account.isVerified) ...[
+                  const SizedBox(height: MedSpace.sm),
+                  const VerifiedBadge(key: Key('profile-verified')),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+// Judul bagian
 class _Title extends StatelessWidget {
   const _Title(this.text);
 
   final String text;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(
-          bottom: MedSpace.sm,
-        ),
-        child: Text(
-          text,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      );
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: MedSpace.sm),
+      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+    );
+  }
 }
 
-class _Row extends StatelessWidget {
-  const _Row({
+// Baris informasi profil
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -280,69 +383,121 @@ class _Row extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MedSpace.md,
-          vertical: MedSpace.md,
-        ),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: MedColors.line,
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MedSpace.md,
+        vertical: MedSpace.md,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: MedColors.line)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: MedColors.brandSoft,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: MedColors.brandDeep, size: 20),
+          ),
+          const SizedBox(width: MedSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: MedColors.inkMuted,
+                    fontSize: 13,
+                  ),
+                ),
+                SelectableText(
+                  value.isEmpty ? '-' : value,
+                  style: const TextStyle(
+                    color: MedColors.ink,
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: MedColors.brandSoft,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: MedColors.brandDeep,
-                size: 20,
-              ),
-            ),
-
-            const SizedBox(width: MedSpace.md),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: MedColors.inkMuted,
-                      fontSize: 13,
-                    ),
-                  ),
-
-                  SelectableText(
-                    value.isEmpty ? '-' : value,
-                    style: const TextStyle(
-                      color: MedColors.ink,
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (trailing != null) ...[
-              const SizedBox(width: MedSpace.sm),
-              trailing!,
-            ],
+          if (trailing != null) ...[
+            const SizedBox(width: MedSpace.sm),
+            trailing!,
           ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 }
 
+// Menu pengaturan profil
+class _ProfileMenuTile extends StatelessWidget {
+  const _ProfileMenuTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.isLogout = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool isLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isLogout ? const Color(0xFFE6002D) : MedColors.ink;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: MedSpace.md,
+        vertical: MedSpace.xs,
+      ),
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: isLogout ? const Color(0xFFFFEEEE) : MedColors.brandSoft,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: isLogout ? const Color(0xFFE6002D) : MedColors.brandDeep,
+        ),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          subtitle,
+          style: const TextStyle(color: MedColors.inkMuted, fontSize: 12),
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        color: isLogout ? const Color(0xFFE6002D) : MedColors.inkMuted,
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+// Chip status masa berlaku
 class _ExpiryChip extends StatelessWidget {
   const _ExpiryChip({required this.state});
 
@@ -351,25 +506,16 @@ class _ExpiryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (background, foreground) = switch (state) {
-      ExpiryState.expired => (
-          const Color(0xFFFEE2E2),
-          const Color(0xFF991B1B),
-        ),
+      ExpiryState.expired => (const Color(0xFFFEE2E2), const Color(0xFF991B1B)),
       ExpiryState.expiring => (
-          const Color(0xFFFEF3C7),
-          const Color(0xFF92400E),
-        ),
-      _ => (
-          const Color(0xFFDCFCE7),
-          const Color(0xFF166534),
-        ),
+        const Color(0xFFFEF3C7),
+        const Color(0xFF92400E),
+      ),
+      _ => (const Color(0xFFDCFCE7), const Color(0xFF166534)),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(MedRadius.sm),
@@ -386,10 +532,9 @@ class _ExpiryChip extends StatelessWidget {
   }
 }
 
+// Item sertifikat
 class _CertificationTile extends StatelessWidget {
-  const _CertificationTile({
-    required this.certification,
-  });
+  const _CertificationTile({required this.certification});
 
   final DriverCertification certification;
 
@@ -398,10 +543,7 @@ class _CertificationTile extends StatelessWidget {
     final meta = [
       certification.issuer,
       certification.certificateNumber,
-    ]
-        .whereType<String>()
-        .where((part) => part.isNotEmpty)
-        .join(' · ');
+    ].whereType<String>().where((part) => part.isNotEmpty).join(' · ');
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -409,11 +551,7 @@ class _CertificationTile extends StatelessWidget {
         vertical: MedSpace.md,
       ),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: MedColors.line,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: MedColors.line)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,9 +564,7 @@ class _CertificationTile extends StatelessWidget {
                 ? MedColors.inkMuted
                 : MedColors.brand,
           ),
-
           const SizedBox(width: MedSpace.md),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,31 +576,18 @@ class _CertificationTile extends StatelessWidget {
                     fontSize: 15.5,
                   ),
                 ),
-
                 if (meta.isNotEmpty)
-                  Text(
-                    meta,
-                    style: const TextStyle(
-                      color: MedColors.inkMuted,
-                    ),
-                  ),
-
+                  Text(meta, style: const TextStyle(color: MedColors.inkMuted)),
                 Text(
                   certification.expiresAt == null
                       ? 'Tanpa masa berlaku'
-                      : 'Berlaku sampai '
-                          '${formatDay(certification.expiresAt)}',
-                  style: const TextStyle(
-                    color: MedColors.ink,
-                  ),
+                      : 'Berlaku sampai ${formatDay(certification.expiresAt)}',
+                  style: const TextStyle(color: MedColors.ink),
                 ),
               ],
             ),
           ),
-
-          _ExpiryChip(
-            state: certification.expiryState,
-          ),
+          _ExpiryChip(state: certification.expiryState),
         ],
       ),
     );

@@ -26,7 +26,6 @@ abstract final class Routes {
   static const chats = '/chat';
   static const profile = '/profile';
   static const security = '/profile/security';
-  static const changePassword = '/profile/change-password';
   static const history = '/history';
 
   static String offer(int dispatchId) => '/offer/$dispatchId';
@@ -106,10 +105,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
       GoRoute(path: Routes.security, builder: (_, _) => const SecurityScreen()),
-      GoRoute(
-        path: Routes.changePassword,
-        builder: (_, _) => const ChangePasswordScreen(),
-      ),
+      
       GoRoute(
         path: Routes.history,
         builder: (_, _) => const HistoryScreen(),
