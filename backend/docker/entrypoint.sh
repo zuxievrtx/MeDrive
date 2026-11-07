@@ -13,6 +13,15 @@ mkdir -p storage/app/public storage/app/private storage/framework/cache/data \
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rwX storage bootstrap/cache
 
+# Fix Nginx client body temporary directory permissions
+mkdir -p /var/lib/nginx/tmp/client_body
+
+chmod 755 /var/lib/nginx
+chmod 711 /var/lib/nginx/tmp
+
+chown www-data:www-data /var/lib/nginx/tmp/client_body
+chmod 700 /var/lib/nginx/tmp/client_body
+
 artisan() { su-exec www-data php artisan "$@"; }
 
 artisan storage:link --force || true
