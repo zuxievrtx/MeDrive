@@ -21,36 +21,75 @@ class ReportDetailScreen extends ConsumerWidget {
     final report = ref.watch(reportDetailProvider(reportId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Laporan')),
+      appBar: AppBar(
+        title: const Text('Detail Laporan'),
+      ),
       body: report.when(
-        loading: () => const SkeletonList(count: 4, itemHeight: 140),
-        error: (error, _) => AsyncErrorView(error: error, onRetry: () => ref.invalidate(reportDetailProvider(reportId))),
+        loading: () => const SkeletonList(
+          count: 4,
+          itemHeight: 140,
+        ),
+        error: (error, _) => AsyncErrorView(
+          error: error,
+          onRetry: () => ref.invalidate(reportDetailProvider(reportId)),
+        ),
         data: (report) => RefreshIndicator(
           onRefresh: () => ref.refresh(reportDetailProvider(reportId).future),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(MedSpace.gutter, MedSpace.sm, MedSpace.gutter, MedSpace.xxl),
+            padding: const EdgeInsets.fromLTRB(
+              MedSpace.gutter,
+              MedSpace.sm,
+              MedSpace.gutter,
+              MedSpace.xxl,
+            ),
             children: [
               _Header(report: report),
+
+              // Pelacakan hanya tersedia selama laporan belum ditutup.
               if (!report.isClosed) ...[
                 const SizedBox(height: MedSpace.lg),
                 PrimaryButton(
-                  label: report.isWaiting ? 'Pantau pencarian ambulans' : 'Lacak Ambulans',
+                  label: report.isWaiting
+                      ? 'Pantau pencarian ambulans'
+                      : 'Lacak Ambulans',
                   icon: Icons.near_me_rounded,
-                  onPressed: () => context.push(Routes.tracking(report.id)),
+                  onPressed: () => context.push(
+                    Routes.tracking(report.id),
+                  ),
                 ),
               ],
+
+              // Driver tetap ditampilkan setelah laporan selesai.
               if (report.driver != null) ...[
                 const SizedBox(height: MedSpace.xl),
                 _DriverCard(report: report),
+
+                const SizedBox(height: MedSpace.md),
+
+                // Chat tetap dapat dibuka untuk melihat riwayat.
+                // Backend akan menolak pengiriman pesan jika laporan ditutup.
+                PrimaryButton(
+                  label: report.isClosed ? 'Lihat Chat' : 'Chat Driver',
+                  icon: Icons.chat_rounded,
+                  onPressed: () => context.push(
+                    Routes.chat(report.id),
+                  ),
+                ),
               ],
+
               const SizedBox(height: MedSpace.xl),
+
               _Timeline(report: report),
+
               const SizedBox(height: MedSpace.xl),
+
               _Details(report: report),
+
               if (report.patients.isNotEmpty) ...[
                 const SizedBox(height: MedSpace.xl),
                 _Patients(patients: report.patients),
               ],
+
               if (report.attachments.isNotEmpty) ...[
                 const SizedBox(height: MedSpace.xl),
                 _Attachments(attachments: report.attachments),
@@ -64,7 +103,10 @@ class ReportDetailScreen extends ConsumerWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
+  const _Section({
+    required this.title,
+    required this.child,
+  });
 
   final String title;
   final Widget child;
@@ -73,7 +115,10 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: MedSpace.sm),
           child,
         ],
@@ -95,32 +140,75 @@ class _Header extends StatelessWidget {
         children: [
           Row(
             children: [
-              ReportTypeTile(icon: reportTypeIcon(type?.icon, code: type?.code), color: colorFromHex(type?.color)),
+              ReportTypeTile(
+                icon: reportTypeIcon(
+                  type?.icon,
+                  code: type?.code,
+                ),
+                color: colorFromHex(type?.color),
+              ),
               const SizedBox(width: MedSpace.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(report.typeName, style: Theme.of(context).textTheme.titleLarge),
-                    SelectableText(report.code, style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w800)),
+                    Text(
+                      report.typeName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    SelectableText(
+                      report.code,
+                      style: const TextStyle(
+                        color: MedColors.inkMuted,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: MedSpace.md),
-          StatusBadge(status: report.statusValue, label: report.status.label, large: true),
+
+          StatusBadge(
+            status: report.statusValue,
+            label: report.status.label,
+            large: true,
+          ),
+
           const SizedBox(height: MedSpace.md),
-          InfoRow(label: 'Dibuat', value: formatDateTime(report.createdAt), icon: Icons.schedule_rounded),
-          InfoRow(label: 'Lokasi jemput', value: report.address ?? '${report.latitude}, ${report.longitude}', icon: Icons.location_on_outlined),
+
+          InfoRow(
+            label: 'Dibuat',
+            value: formatDateTime(report.createdAt),
+            icon: Icons.schedule_rounded,
+          ),
+
+          InfoRow(
+            label: 'Lokasi jemput',
+            value: report.address ??
+                '${report.latitude}, ${report.longitude}',
+            icon: Icons.location_on_outlined,
+          ),
+
           if (report.destination != null)
             InfoRow(
               label: 'Tujuan antar',
-              value: [report.destination!.name, report.destination!.address].whereType<String>().join(' · '),
+              value: [
+                report.destination!.name,
+                report.destination!.address,
+              ].whereType<String>().join(' · '),
               icon: Icons.flag_outlined,
             ),
-          if (report.description != null && report.description!.isNotEmpty)
-            InfoRow(label: 'Keterangan', value: report.description!, icon: Icons.notes_rounded),
+
+          if (report.description != null &&
+              report.description!.isNotEmpty)
+            InfoRow(
+              label: 'Keterangan',
+              value: report.description!,
+              icon: Icons.notes_rounded,
+            ),
         ],
       ),
     );
@@ -142,8 +230,13 @@ class _DriverCard extends StatelessWidget {
       child: AppCard(
         child: Row(
           children: [
-            DriverAvatar(name: driver.name, photoUrl: driver.photoUrl),
+            DriverAvatar(
+              name: driver.name,
+              photoUrl: driver.photoUrl,
+            ),
+
             const SizedBox(width: MedSpace.md),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,16 +246,35 @@ class _DriverCard extends StatelessWidget {
                     runSpacing: 4,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text(driver.name, style: Theme.of(context).textTheme.titleMedium),
-                      if (driver.isVerified) const VerifiedBadge(),
+                      Text(
+                        driver.name,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      if (driver.isVerified)
+                        const VerifiedBadge(),
                     ],
                   ),
+
                   if (ambulance != null)
                     Text(
-                      [ambulance.plateNumber, ambulance.type, ambulance.vehicleName].whereType<String>().join(' · '),
-                      style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700),
+                      [
+                        ambulance.plateNumber,
+                        ambulance.type,
+                        ambulance.vehicleName,
+                      ].whereType<String>().join(' · '),
+                      style: const TextStyle(
+                        color: MedColors.inkMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  if (driver.clinic != null) Text(driver.clinic!, style: const TextStyle(color: MedColors.inkMuted)),
+
+                  if (driver.clinic != null)
+                    Text(
+                      driver.clinic!,
+                      style: const TextStyle(
+                        color: MedColors.inkMuted,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -182,18 +294,31 @@ class _Timeline extends StatelessWidget {
   Widget build(BuildContext context) => _Section(
         title: 'Riwayat Status',
         child: report.timeline.isEmpty
-            ? const Text('Belum ada riwayat status.', style: TextStyle(color: MedColors.inkMuted))
+            ? const Text(
+                'Belum ada riwayat status.',
+                style: TextStyle(
+                  color: MedColors.inkMuted,
+                ),
+              )
             : Column(
                 children: [
-                  for (var index = 0; index < report.timeline.length; index++)
-                    _TimelineItem(log: report.timeline[index], isLast: index == report.timeline.length - 1),
+                  for (var index = 0;
+                      index < report.timeline.length;
+                      index++)
+                    _TimelineItem(
+                      log: report.timeline[index],
+                      isLast: index == report.timeline.length - 1,
+                    ),
                 ],
               ),
       );
 }
 
 class _TimelineItem extends StatelessWidget {
-  const _TimelineItem({required this.log, required this.isLast});
+  const _TimelineItem({
+    required this.log,
+    required this.isLast,
+  });
 
   final ReportStatusLog log;
   final bool isLast;
@@ -212,26 +337,56 @@ class _TimelineItem extends StatelessWidget {
                     width: 14,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: isLast ? MedColors.brand : MedColors.line,
+                      color: isLast
+                          ? MedColors.brand
+                          : MedColors.line,
                       shape: BoxShape.circle,
-                      border: Border.all(color: isLast ? MedColors.brandSoft : MedColors.surface, width: 3),
+                      border: Border.all(
+                        color: isLast
+                            ? MedColors.brandSoft
+                            : MedColors.surface,
+                        width: 3,
+                      ),
                     ),
                   ),
-                  if (!isLast) const Expanded(child: VerticalDivider(width: 2, thickness: 2)),
+                  if (!isLast)
+                    const Expanded(
+                      child: VerticalDivider(
+                        width: 2,
+                        thickness: 2,
+                      ),
+                    ),
                 ],
               ),
             ),
+
             const SizedBox(width: MedSpace.sm),
+
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: MedSpace.lg),
+                padding: const EdgeInsets.only(
+                  bottom: MedSpace.lg,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StatusBadge(status: log.toStatus.value, label: log.toStatus.label),
+                    StatusBadge(
+                      status: log.toStatus.value,
+                      label: log.toStatus.label,
+                    ),
+
                     const SizedBox(height: 4),
-                    Text(formatDateTime(log.createdAt), style: const TextStyle(color: MedColors.inkMuted, fontWeight: FontWeight.w700)),
-                    if (log.note != null && log.note!.isNotEmpty) Text(log.note!),
+
+                    Text(
+                      formatDateTime(log.createdAt),
+                      style: const TextStyle(
+                        color: MedColors.inkMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+
+                    if (log.note != null && log.note!.isNotEmpty)
+                      Text(log.note!),
                   ],
                 ),
               ),
@@ -246,47 +401,163 @@ class _Details extends StatelessWidget {
 
   final Report report;
 
-  String _yesNo(bool? value) => value == null ? 'Tidak diketahui' : (value ? 'Ya' : 'Tidak');
+  String _yesNo(bool? value) =>
+      value == null ? 'Tidak diketahui' : (value ? 'Ya' : 'Tidak');
 
   @override
   Widget build(BuildContext context) {
     final rows = switch (report.details) {
-      AccidentDetails(:final accidentType, :final estimatedVictimCount, :final hasTrappedVictim, :final hasFireHazard, :final isRoadBlocked) => [
-          InfoRow(label: 'Jenis kecelakaan', value: accidentType?.label ?? '-'),
-          InfoRow(label: 'Perkiraan korban', value: estimatedVictimCount == null ? 'Tidak diketahui' : '$estimatedVictimCount orang'),
-          InfoRow(label: 'Korban terjepit', value: _yesNo(hasTrappedVictim)),
-          InfoRow(label: 'Potensi api', value: _yesNo(hasFireHazard)),
-          InfoRow(label: 'Jalan tertutup', value: _yesNo(isRoadBlocked)),
-        ],
-      MedicalDetails(:final medicalCategory, :final symptomOnsetAt, :final hasMedicalHistory, :final medicalHistoryNotes) => [
-          InfoRow(label: 'Kondisi', value: medicalCategory?.label ?? '-'),
-          InfoRow(label: 'Gejala mulai', value: symptomOnsetAt == null ? 'Tidak diketahui' : formatDateTime(symptomOnsetAt)),
+      AccidentDetails(
+        :final accidentType,
+        :final estimatedVictimCount,
+        :final hasTrappedVictim,
+        :final hasFireHazard,
+        :final isRoadBlocked
+      ) => [
           InfoRow(
-            label: 'Riwayat penyakit',
-            value: hasMedicalHistory == true ? (medicalHistoryNotes?.isNotEmpty == true ? medicalHistoryNotes! : 'Ada') : _yesNo(hasMedicalHistory),
+            label: 'Jenis kecelakaan',
+            value: accidentType?.label ?? '-',
+          ),
+          InfoRow(
+            label: 'Perkiraan korban',
+            value: estimatedVictimCount == null
+                ? 'Tidak diketahui'
+                : '$estimatedVictimCount orang',
+          ),
+          InfoRow(
+            label: 'Korban terjepit',
+            value: _yesNo(hasTrappedVictim),
+          ),
+          InfoRow(
+            label: 'Potensi api',
+            value: _yesNo(hasFireHazard),
+          ),
+          InfoRow(
+            label: 'Jalan tertutup',
+            value: _yesNo(isRoadBlocked),
           ),
         ],
-      MaternityDetails(:final gestationalAgeWeeks, :final contractionIntervalMinutes, :final isWaterBroken, :final hasBleeding, :final pregnancyNumber, :final destinationClinic) => [
-          InfoRow(label: 'Usia kehamilan', value: gestationalAgeWeeks == null ? '-' : '$gestationalAgeWeeks minggu'),
-          InfoRow(label: 'Jarak kontraksi', value: contractionIntervalMinutes == null ? '-' : 'tiap $contractionIntervalMinutes menit'),
-          InfoRow(label: 'Ketuban pecah', value: _yesNo(isWaterBroken)),
-          InfoRow(label: 'Perdarahan', value: _yesNo(hasBleeding)),
-          InfoRow(label: 'Kehamilan ke-', value: pregnancyNumber?.toString() ?? '-'),
-          if (destinationClinic != null) InfoRow(label: 'Faskes tujuan', value: destinationClinic.name),
+
+      MedicalDetails(
+        :final medicalCategory,
+        :final symptomOnsetAt,
+        :final hasMedicalHistory,
+        :final medicalHistoryNotes
+      ) => [
+          InfoRow(
+            label: 'Kondisi',
+            value: medicalCategory?.label ?? '-',
+          ),
+          InfoRow(
+            label: 'Gejala mulai',
+            value: symptomOnsetAt == null
+                ? 'Tidak diketahui'
+                : formatDateTime(symptomOnsetAt),
+          ),
+          InfoRow(
+            label: 'Riwayat penyakit',
+            value: hasMedicalHistory == true
+                ? (medicalHistoryNotes?.isNotEmpty == true
+                    ? medicalHistoryNotes!
+                    : 'Ada')
+                : _yesNo(hasMedicalHistory),
+          ),
         ],
-      FuneralDetails(:final deceasedName, :final pickupPlaceType, :final scheduledPickupAt, :final hasDeathCertificate, :final familyContactName, :final familyContactPhone) => [
-          InfoRow(label: 'Nama almarhum/almarhumah', value: deceasedName ?? '-'),
-          InfoRow(label: 'Tempat jemput', value: pickupPlaceType?.label ?? '-'),
-          InfoRow(label: 'Jadwal jemput', value: scheduledPickupAt == null ? 'Secepatnya' : formatDateTime(scheduledPickupAt)),
-          InfoRow(label: 'Surat kematian', value: hasDeathCertificate == true ? 'Ada' : 'Belum ada'),
-          InfoRow(label: 'Kontak keluarga', value: [familyContactName, familyContactPhone].whereType<String>().join(' · ')),
+
+      MaternityDetails(
+        :final gestationalAgeWeeks,
+        :final contractionIntervalMinutes,
+        :final isWaterBroken,
+        :final hasBleeding,
+        :final pregnancyNumber,
+        :final destinationClinic
+      ) => [
+          InfoRow(
+            label: 'Usia kehamilan',
+            value: gestationalAgeWeeks == null
+                ? '-'
+                : '$gestationalAgeWeeks minggu',
+          ),
+          InfoRow(
+            label: 'Jarak kontraksi',
+            value: contractionIntervalMinutes == null
+                ? '-'
+                : 'tiap $contractionIntervalMinutes menit',
+          ),
+          InfoRow(
+            label: 'Ketuban pecah',
+            value: _yesNo(isWaterBroken),
+          ),
+          InfoRow(
+            label: 'Perdarahan',
+            value: _yesNo(hasBleeding),
+          ),
+          InfoRow(
+            label: 'Kehamilan ke-',
+            value: pregnancyNumber?.toString() ?? '-',
+          ),
+          if (destinationClinic != null)
+            InfoRow(
+              label: 'Faskes tujuan',
+              value: destinationClinic.name,
+            ),
         ],
-      _ => const <Widget>[Text('Belum ada detail tambahan.', style: TextStyle(color: MedColors.inkMuted))],
+
+      FuneralDetails(
+        :final deceasedName,
+        :final pickupPlaceType,
+        :final scheduledPickupAt,
+        :final hasDeathCertificate,
+        :final familyContactName,
+        :final familyContactPhone
+      ) => [
+          InfoRow(
+            label: 'Nama almarhum/almarhumah',
+            value: deceasedName ?? '-',
+          ),
+          InfoRow(
+            label: 'Tempat jemput',
+            value: pickupPlaceType?.label ?? '-',
+          ),
+          InfoRow(
+            label: 'Jadwal jemput',
+            value: scheduledPickupAt == null
+                ? 'Secepatnya'
+                : formatDateTime(scheduledPickupAt),
+          ),
+          InfoRow(
+            label: 'Surat kematian',
+            value: hasDeathCertificate == true
+                ? 'Ada'
+                : 'Belum ada',
+          ),
+          InfoRow(
+            label: 'Kontak keluarga',
+            value: [
+              familyContactName,
+              familyContactPhone,
+            ].whereType<String>().join(' · '),
+          ),
+        ],
+
+      _ => const <Widget>[
+          Text(
+            'Belum ada detail tambahan.',
+            style: TextStyle(
+              color: MedColors.inkMuted,
+            ),
+          ),
+        ],
     };
 
     return _Section(
       title: 'Detail ${report.typeName}',
-      child: AppCard(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows)),
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: rows,
+        ),
+      ),
     );
   }
 }
@@ -303,7 +574,9 @@ class _Patients extends StatelessWidget {
           children: [
             for (final patient in patients)
               Padding(
-                padding: const EdgeInsets.only(bottom: MedSpace.sm),
+                padding: const EdgeInsets.only(
+                  bottom: MedSpace.sm,
+                ),
                 child: AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,15 +584,36 @@ class _Patients extends StatelessWidget {
                       Text(
                         [
                           patient.name ?? 'Tanpa nama',
-                          if (patient.gender != null) patient.gender == 'L' ? 'Laki-laki' : 'Perempuan',
-                          if (patient.ageEstimate != null) '± ${patient.ageEstimate} tahun',
+                          if (patient.gender != null)
+                            patient.gender == 'L'
+                                ? 'Laki-laki'
+                                : 'Perempuan',
+                          if (patient.ageEstimate != null)
+                            '± ${patient.ageEstimate} tahun',
                         ].join(' · '),
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall,
                       ),
-                      if (patient.consciousness != null) InfoRow(label: 'Kesadaran', value: patient.consciousness!.label),
-                      if (patient.conditionNote != null) InfoRow(label: 'Kondisi', value: patient.conditionNote!),
+
+                      if (patient.consciousness != null)
+                        InfoRow(
+                          label: 'Kesadaran',
+                          value: patient.consciousness!.label,
+                        ),
+
+                      if (patient.conditionNote != null)
+                        InfoRow(
+                          label: 'Kondisi',
+                          value: patient.conditionNote!,
+                        ),
+
                       if (patient.handedOverTo != null)
-                        InfoRow(label: 'Diserahkan ke', value: '${patient.handedOverTo} · ${formatDateTime(patient.handedOverAt)}'),
+                        InfoRow(
+                          label: 'Diserahkan ke',
+                          value:
+                              '${patient.handedOverTo} · ${formatDateTime(patient.handedOverAt)}',
+                        ),
                     ],
                   ),
                 ),
@@ -349,10 +643,20 @@ class _Attachments extends StatelessWidget {
                 button: true,
                 label: 'Buka ${attachment.type.label}',
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(MedRadius.md),
-                  onTap: attachment.isImage ? () => showImageViewer(context, attachment.url, caption: attachment.type.label) : null,
+                  borderRadius: BorderRadius.circular(
+                    MedRadius.md,
+                  ),
+                  onTap: attachment.isImage
+                      ? () => showImageViewer(
+                            context,
+                            attachment.url,
+                            caption: attachment.type.label,
+                          )
+                      : null,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(MedRadius.md),
+                    borderRadius: BorderRadius.circular(
+                      MedRadius.md,
+                    ),
                     child: attachment.isImage
                         ? AuthImage(url: attachment.url)
                         : ColoredBox(
@@ -361,8 +665,17 @@ class _Attachments extends StatelessWidget {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.description_outlined, color: MedColors.inkMuted),
-                                  Text(attachment.type.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+                                  const Icon(
+                                    Icons.description_outlined,
+                                    color: MedColors.inkMuted,
+                                  ),
+                                  Text(
+                                    attachment.type.label,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
