@@ -15,6 +15,7 @@ import 'features/mission/mission_screen.dart';
 import 'features/mission/patients_screen.dart';
 import 'features/offer/offer_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/profile/security_screen.dart';
 import 'state/session.dart';
 
 abstract final class Routes {
@@ -24,6 +25,8 @@ abstract final class Routes {
   static const home = '/home';
   static const chats = '/chat';
   static const profile = '/profile';
+  static const security = '/profile/security';
+  static const changePassword = '/profile/change-password';
   static const history = '/history';
 
   static String offer(int dispatchId) => '/offer/$dispatchId';
@@ -38,42 +41,86 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final routerProvider = Provider<GoRouter>((ref) {
   final session = ValueNotifier<SessionState>(ref.read(sessionProvider));
-  ref.listen(sessionProvider, (_, next) => session.value = next);
 
-  int id(GoRouterState state) => int.parse(state.pathParameters['id']!);
+  ref.listen(sessionProvider, (_, next) {
+    session.value = next;
+  });
+
+  int id(GoRouterState state) {
+    return int.parse(state.pathParameters['id']!);
+  }
 
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: Routes.splash,
     refreshListenable: session,
-    redirect: (context, state) => _redirect(session.value, state.matchedLocation),
+    redirect: (context, state) {
+      return _redirect(session.value, state.matchedLocation);
+    },
     routes: [
       GoRoute(path: Routes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginScreen()),
-      GoRoute(path: Routes.forcePassword, builder: (_, _) => const ForcePasswordScreen()),
+      GoRoute(
+        path: Routes.forcePassword,
+        builder: (_, _) => const ForcePasswordScreen(),
+      ),
       GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
       GoRoute(
         path: '/offer/:id',
-        pageBuilder: (_, state) => MaterialPage<void>(fullscreenDialog: true, child: OfferScreen(dispatchId: id(state))),
+        pageBuilder: (_, state) => MaterialPage<void>(
+          fullscreenDialog: true,
+          child: OfferScreen(dispatchId: id(state)),
+        ),
       ),
       GoRoute(
         path: '/mission/:id',
-        builder: (_, state) => MissionScreen(reportId: id(state)),
+        builder: (_, state) {
+          return MissionScreen(reportId: id(state));
+        },
         routes: [
-          GoRoute(path: 'patients', builder: (_, state) => PatientsScreen(reportId: id(state))),
-          GoRoute(path: 'photos', builder: (_, state) => HandlingPhotosScreen(reportId: id(state))),
+          GoRoute(
+            path: 'patients',
+            builder: (_, state) {
+              return PatientsScreen(reportId: id(state));
+            },
+          ),
+          GoRoute(
+            path: 'photos',
+            builder: (_, state) {
+              return HandlingPhotosScreen(reportId: id(state));
+            },
+          ),
         ],
       ),
       GoRoute(
         path: Routes.chats,
         builder: (_, _) => const ChatListScreen(),
-        routes: [GoRoute(path: ':id', builder: (_, state) => ChatScreen(reportId: id(state)))],
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) {
+              return ChatScreen(reportId: id(state));
+            },
+          ),
+        ],
       ),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: Routes.security, builder: (_, _) => const SecurityScreen()),
+      GoRoute(
+        path: Routes.changePassword,
+        builder: (_, _) => const ChangePasswordScreen(),
+      ),
       GoRoute(
         path: Routes.history,
         builder: (_, _) => const HistoryScreen(),
-        routes: [GoRoute(path: ':id', builder: (_, state) => HistoryDetailScreen(reportId: id(state)))],
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (_, state) {
+              return HistoryDetailScreen(reportId: id(state));
+            },
+          ),
+        ],
       ),
     ],
   );
@@ -82,6 +129,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     router.dispose();
     session.dispose();
   });
+
   return router;
 });
 
@@ -89,15 +137,21 @@ String? _redirect(SessionState session, String location) {
   switch (session.status) {
     case SessionStatus.unknown:
       return location == Routes.splash ? null : Routes.splash;
+
     case SessionStatus.unauthenticated:
       return location == Routes.login ? null : Routes.login;
+
     case SessionStatus.authenticated:
       if (session.mustChangePassword) {
         return location == Routes.forcePassword ? null : Routes.forcePassword;
       }
-      if (location == Routes.splash || location == Routes.forcePassword || location == Routes.login) {
+
+      if (location == Routes.splash ||
+          location == Routes.forcePassword ||
+          location == Routes.login) {
         return Routes.home;
       }
+
       return null;
   }
 }
