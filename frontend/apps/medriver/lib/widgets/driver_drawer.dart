@@ -15,10 +15,15 @@ import 'media.dart';
 /// Side menu (Figma): header merah dengan avatar inisial, nama, klinik, ambulans aktif dari API,
 /// badge Terverifikasi; menu Profil, Chat, Riwayat, Keluar; versi aplikasi. Tanpa rating.
 class DriverDrawer extends ConsumerWidget {
-  const DriverDrawer({super.key, required this.onCloseShiftRequested});
+  const DriverDrawer({
+    super.key,
+    required this.onCloseShiftRequested,
+    required this.onDutyToggleRequested,
+  });
 
   /// Keluar diminta saat shift masih terbuka: arahkan ke penutupan shift lebih dulu.
   final VoidCallback onCloseShiftRequested;
+  final VoidCallback onDutyToggleRequested;
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     final driver = ref.read(driverProvider).value;
@@ -26,7 +31,10 @@ class DriverDrawer extends ConsumerWidget {
 
     if (driver?.hasMission ?? false) {
       navigator.pop();
-      showMessage(context, 'Selesaikan laporan yang sedang ditangani sebelum keluar.');
+      showMessage(
+        context,
+        'Selesaikan laporan yang sedang ditangani sebelum keluar.',
+      );
       return;
     }
 
@@ -34,7 +42,8 @@ class DriverDrawer extends ConsumerWidget {
       final closeFirst = await ConfirmDialog.show(
         context,
         title: 'Shift masih aktif',
-        message: 'Tutup shift lebih dulu supaya tawaran laporan tidak lagi dikirim ke ambulans '
+        message:
+            'Tutup shift lebih dulu supaya tawaran laporan tidak lagi dikirim ke ambulans '
             '${driver!.shift?.ambulance?.plateNumber ?? 'Anda'}.',
         confirmLabel: 'Tutup Shift',
         icon: Icons.local_shipping_outlined,
@@ -91,7 +100,12 @@ class DriverDrawer extends ConsumerWidget {
         children: [
           Container(
             color: MedColors.brand,
-            padding: EdgeInsets.fromLTRB(MedSpace.xl, MediaQuery.paddingOf(context).top + MedSpace.xl, MedSpace.xl, MedSpace.xl),
+            padding: EdgeInsets.fromLTRB(
+              MedSpace.xl,
+              MediaQuery.paddingOf(context).top + MedSpace.xl,
+              MedSpace.xl,
+              MedSpace.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -107,14 +121,32 @@ class DriverDrawer extends ConsumerWidget {
                   name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, height: 1.15),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    height: 1.15,
+                  ),
                 ),
                 if (clinic != null)
-                  Text(clinic, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  Text(
+                    clinic,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 const SizedBox(height: 2),
                 Text(
                   plate == null ? 'Belum memakai ambulans' : 'Ambulans $plate',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.3),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
                 ),
                 if (account?.isVerified ?? false) ...[
                   const SizedBox(height: MedSpace.md),
@@ -124,7 +156,15 @@ class DriverDrawer extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: MedSpace.sm),
-          _MenuTile(icon: Icons.person_outline_rounded, label: 'Profil', onTap: () => go(Routes.profile)),
+          _DutyMenuTile(
+            active: snapshot?.isActive ?? false,
+            onChanged: (_) => onDutyToggleRequested(),
+          ),
+          _MenuTile(
+            icon: Icons.person_outline_rounded,
+            label: 'Profil',
+            onTap: () => go(Routes.profile),
+          ),
           _MenuTile(
             icon: Icons.chat_bubble_outline_rounded,
             label: 'Chat',
@@ -135,19 +175,40 @@ class DriverDrawer extends ConsumerWidget {
                     child: CircleAvatar(
                       radius: 15,
                       backgroundColor: MedColors.brand,
-                      child: Text(unread > 99 ? '99+' : '$unread', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+                      child: Text(
+                        unread > 99 ? '99+' : '$unread',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   )
                 : null,
           ),
-          _MenuTile(icon: Icons.history_rounded, label: 'Riwayat', onTap: () => go(Routes.history)),
+          _MenuTile(
+            icon: Icons.history_rounded,
+            label: 'Riwayat',
+            onTap: () => go(Routes.history),
+          ),
           const Spacer(),
           const Divider(),
-          _MenuTile(icon: Icons.logout_rounded, label: 'Keluar', destructive: true, onTap: () => _logout(context, ref)),
+          _MenuTile(
+            icon: Icons.logout_rounded,
+            label: 'Keluar',
+            destructive: true,
+            onTap: () => _logout(context, ref),
+          ),
           const SafeArea(
             top: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(MedSpace.xl, MedSpace.sm, MedSpace.xl, MedSpace.lg),
+              padding: EdgeInsets.fromLTRB(
+                MedSpace.xl,
+                MedSpace.sm,
+                MedSpace.xl,
+                MedSpace.lg,
+              ),
               child: Text(
                 'MeDriveR v$appVersion',
                 textAlign: TextAlign.center,
@@ -161,8 +222,41 @@ class DriverDrawer extends ConsumerWidget {
   }
 }
 
+class _DutyMenuTile extends StatelessWidget {
+  const _DutyMenuTile({required this.active, required this.onChanged});
+
+  final bool active;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    minTileHeight: 60,
+    contentPadding: const EdgeInsets.symmetric(horizontal: MedSpace.xl),
+    leading: Icon(
+      active ? Icons.circle : Icons.circle_outlined,
+      color: active ? MedColors.brand : MedColors.inkMuted,
+      size: 18,
+    ),
+    title: const Text(
+      'Status kerja',
+      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+    ),
+    trailing: Switch(
+      value: active,
+      onChanged: onChanged,
+      activeColor: MedColors.brand,
+    ),
+  );
+}
+
 class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.icon, required this.label, required this.onTap, this.trailing, this.destructive = false});
+  const _MenuTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailing,
+    this.destructive = false,
+  });
 
   final IconData icon;
   final String label;
@@ -177,7 +271,14 @@ class _MenuTile extends StatelessWidget {
       minTileHeight: 60,
       contentPadding: const EdgeInsets.symmetric(horizontal: MedSpace.xl),
       leading: Icon(icon, color: color, size: 28),
-      title: Text(label, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w800)),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
       trailing: trailing,
       onTap: onTap,
     );
